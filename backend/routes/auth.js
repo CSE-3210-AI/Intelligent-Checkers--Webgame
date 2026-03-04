@@ -1,26 +1,25 @@
+
 import express from 'express';
-import { body } from 'express-validator';
-import { signup, signin } from '../controllers/authController.js';
+import { body, query } from 'express-validator';
+import { createProfileController, getProfileByEmail } from '../controllers/authController.js';
+
 
 const router = express.Router();
 
 router.post(
-  '/signup',
+  '/profile',
   [
+    body('id').isUUID().withMessage('Invalid Supabase UID'),
     body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
     body('email').isEmail().withMessage('Invalid email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   ],
-  signup
+  createProfileController
 );
 
-router.post(
-  '/signin',
-  [
-    body('email').isEmail().withMessage('Invalid email'),
-    body('password').notEmpty().withMessage('Password required'),
-  ],
-  signin
+router.get(
+  '/profile',
+  [query('email').isEmail().withMessage('Invalid email')],
+  getProfileByEmail
 );
 
 export default router;

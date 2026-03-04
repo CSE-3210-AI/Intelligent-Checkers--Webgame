@@ -28,9 +28,21 @@ export default function SignUp() {
       alert(error.message);
       return;
     }
-    // Optionally, you can require email confirmation here
-    login({ email, username });
-    navigate('/');
+    // Create profile in backend
+    const user = data.user;
+    if (user) {
+      await fetch('http://localhost:4000/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          email: user.email,
+          username
+        })
+      });
+      login({ email, username });
+      navigate('/');
+    }
   }
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-slate-100 to-blue-100 px-4">

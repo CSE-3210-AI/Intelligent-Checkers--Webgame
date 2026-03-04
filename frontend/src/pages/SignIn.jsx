@@ -18,8 +18,17 @@ export default function SignIn() {
       alert(error.message);
       return;
     }
-    // Fetch user profile (username) if available
+    // Fetch user profile from backend
     let username = data.user?.user_metadata?.username || data.user?.email;
+    try {
+      const res = await fetch(`http://localhost:4000/api/profile?email=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const { profile } = await res.json();
+        username = profile.username;
+      }
+    } catch (e) {
+      // fallback to metadata username
+    }
     login({ email: data.user.email, username });
     navigate('/');
   }

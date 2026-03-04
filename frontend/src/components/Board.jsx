@@ -17,8 +17,8 @@ const Board = ({ pieces, highlights = [] }) => {
   };
 
   return (
-    <div className="bg-black p-4 inline-block">
-      <div className="grid grid-cols-8 gap-0 w-[512px] h-[512px]">
+    <div className="bg-black p-6 inline-block rounded-sm">
+      <div className="grid grid-cols-8 gap-0 w-[640px] h-[640px]">
         {Array.from({ length: 8 }, (_, row) =>
           Array.from({ length: 8 }, (_, col) => renderSquare(row, col))
         )}

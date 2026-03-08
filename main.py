@@ -31,6 +31,7 @@ from client.screens.select_internal_agent import SelectInternalAgentScreen
 from client.screens.tournament_mode import TournamentModeScreen
 from client.screens.tournament_internal import TournamentInternalScreen
 from client.screens.tournament_online import TournamentOnlineScreen
+from client.screens.tournament_human import TournamentHumanScreen
 from client.screens.game_page import GameScreen
 
 
@@ -65,6 +66,7 @@ class Application:
             "tournament_mode":        TournamentModeScreen(self),
             "tournament_internal":    TournamentInternalScreen(self),
             "tournament_online":      TournamentOnlineScreen(self),
+            "tournament_human":       TournamentHumanScreen(self),
             "game":                   GameScreen(self),
         }
         self.current_screen = self.screens["home"]

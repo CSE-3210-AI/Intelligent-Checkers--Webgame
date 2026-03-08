@@ -14,8 +14,10 @@ class TournamentModeScreen(BaseScreen):
     def __init__(self, app):
         super().__init__(app)
         cx = WINDOW_WIDTH // 2
-        cw, ch = 380, 320
-        gap = 40
+        cw, ch = 340, 320
+        gap = 28
+        total = cw * 3 + gap * 2
+        left = cx - total // 2
 
         self.btn_back = Button(
             pygame.Rect(30, 30, 80, 30),
@@ -24,8 +26,18 @@ class TournamentModeScreen(BaseScreen):
             border=1, border_color=BLUE_200,
         )
 
+        self.card_hvh = TournamentCard(
+            pygame.Rect(left, 220, cw, ch),
+            "Human vs Human",
+            "Two players share the same screen. "
+            "Use this mode to test the rules engine manually "
+            "before any AI is involved.",
+            ["Manual Play", "Rules Testing"],
+            EMERALD_500,
+            on_click=lambda: self.app.switch("tournament_human"),
+        )
         self.card_internal = TournamentCard(
-            pygame.Rect(cx - cw - gap // 2, 220, cw, ch),
+            pygame.Rect(left + cw + gap, 220, cw, ch),
             "Internal AI Tournament",
             "Benchmark our in-house AI agents against each other for "
             "algorithmic comparison and research evaluation.",
@@ -34,7 +46,7 @@ class TournamentModeScreen(BaseScreen):
             on_click=lambda: self.app.switch("tournament_internal"),
         )
         self.card_online = TournamentCard(
-            pygame.Rect(cx + gap // 2, 220, cw, ch),
+            pygame.Rect(left + (cw + gap) * 2, 220, cw, ch),
             "Online Benchmark Tournament",
             "Compete with a selected internal AI agent against an external "
             "AI from public repositories for cross-system benchmarking.",
@@ -45,6 +57,7 @@ class TournamentModeScreen(BaseScreen):
 
     def handle_event(self, ev):
         self.btn_back.handle_event(ev)
+        self.card_hvh.handle_event(ev)
         self.card_internal.handle_event(ev)
         self.card_online.handle_event(ev)
 
@@ -54,5 +67,6 @@ class TournamentModeScreen(BaseScreen):
         render_text_centered(surf, "Tournament Mode Selection",
                              get_font("5xl_b"), SLATE_900,
                              (WINDOW_WIDTH // 2, 120))
+        self.card_hvh.draw(surf)
         self.card_internal.draw(surf)
         self.card_online.draw(surf)

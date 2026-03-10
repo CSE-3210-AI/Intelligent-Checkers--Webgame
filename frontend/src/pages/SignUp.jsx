@@ -22,13 +22,12 @@ export default function SignUp() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } }
+      options: { data: { username } },
     });
     if (error) {
       alert(error.message);
       return;
     }
-    // Optionally, you can require email confirmation here
     login({ email, username });
     navigate('/');
   }

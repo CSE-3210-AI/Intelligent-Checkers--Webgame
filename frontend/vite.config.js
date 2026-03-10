@@ -10,4 +10,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Forward all /api/* requests to the Express backend.
+      // The backend runs on port 4000 (set via PORT in backend/.env).
+      '/api': {
+        target:       'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

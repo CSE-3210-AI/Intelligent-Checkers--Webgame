@@ -18,8 +18,7 @@ export default function SignIn() {
       alert(error.message);
       return;
     }
-    // Fetch user profile (username) if available
-    let username = data.user?.user_metadata?.username || data.user?.email;
+    const username = data.user?.user_metadata?.username || data.user?.email;
     login({ email: data.user.email, username });
     navigate('/');
   }

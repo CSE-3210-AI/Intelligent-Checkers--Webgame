@@ -1,6 +1,5 @@
-import bcrypt from 'bcrypt';
 import { validationResult } from 'express-validator';
-import { createUser, findUserByEmail } from '../models/userModel.js';
+import { supabaseAdmin } from '../config/supabase.js';
 
 export async function signup(req, res) {
   const errors = validationResult(req);
@@ -9,13 +8,24 @@ export async function signup(req, res) {
   }
   const { username, email, password } = req.body;
   try {
-    const existing = await findUserByEmail(email);
-    if (existing) {
-      return res.status(409).json({ error: 'Email already in use' });
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { username },
+      email_confirm: true,
+    });
+    if (error) {
+      const status = error.status || 400;
+      return res.status(status).json({ error: error.message });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await createUser({ username, email, hashedPassword });
-    res.status(201).json({ user });
+    res.status(201).json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        username: data.user.user_metadata?.username,
+        created_at: data.user.created_at,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -28,15 +38,19 @@ export async function signin(req, res) {
   }
   const { email, password } = req.body;
   try {
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    if (error) {
+      return res.status(401).json({ error: error.message });
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    res.json({ user: { id: user.id, username: user.username, email: user.email, created_at: user.created_at } });
+    res.json({
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        username: data.user.user_metadata?.username || data.user.email,
+        created_at: data.user.created_at,
+      },
+      session: data.session,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

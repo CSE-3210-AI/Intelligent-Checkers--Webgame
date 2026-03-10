@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Users, Bot, ArrowLeft } from 'lucide-react';
+import { Users, Bot, ArrowLeft, Swords } from 'lucide-react';
 
 export default function TournamentModeSelection() {
   const navigate = useNavigate();
@@ -18,9 +18,35 @@ export default function TournamentModeSelection() {
       <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
         Tournament Mode Selection
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-12">
+
+        {/* Human vs Human */}
+        <Card
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-emerald-300 hover:border-emerald-500"
+          onClick={() => navigate('/game?autostart=true')}
+        >
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
+              <Swords className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl">Human vs Human</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Play a live match against another person on the same device. Full rules, undo, resign, and win detection included.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button variant="secondary" className="text-xs">Local Multiplayer</Button>
+              <Button variant="secondary" className="text-xs">Full Rules</Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Internal AI Tournament */}
-        <Card className="cursor-pointer transition-all duration-300 hover:shadow-xl border-blue-200 hover:border-blue-400" onClick={() => navigate('/tournament/internal')}> 
+        <Card
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-blue-200 hover:border-blue-400"
+          onClick={() => navigate('/tournament/internal')}
+        >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
               <Users className="w-8 h-8 text-white" />
@@ -37,8 +63,12 @@ export default function TournamentModeSelection() {
             </div>
           </CardContent>
         </Card>
+
         {/* Online Benchmark Tournament */}
-        <Card className="cursor-pointer transition-all duration-300 hover:shadow-xl border-slate-400 hover:border-slate-600" onClick={() => navigate('/tournament/online')}> 
+        <Card
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-slate-400 hover:border-slate-600"
+          onClick={() => navigate('/tournament/online')}
+        >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-lg">
               <Bot className="w-8 h-8 text-white" />
@@ -55,6 +85,7 @@ export default function TournamentModeSelection() {
             </div>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

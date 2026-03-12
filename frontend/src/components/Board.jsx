@@ -16,6 +16,7 @@ const Board = ({
   highlights = [],
   selected = null,
   moveable = new Set(),
+  lastMoveHighlights = [],
   onSquareClick,
 }) => {
   const renderSquare = (row, col) => {
@@ -24,6 +25,7 @@ const Board = ({
     const isHighlighted = highlights.some(([r, c]) => r === row && c === col);
     const isSelected = selected !== null && selected[0] === row && selected[1] === col;
     const isMoveable = moveable.has(`${row},${col}`);
+    const isLastMove = lastMoveHighlights.some(([r, c]) => r === row && c === col);
 
     return (
       <Square
@@ -33,14 +35,15 @@ const Board = ({
         isHighlighted={isHighlighted}
         isSelected={isSelected}
         isMoveable={isMoveable}
+        isLastMove={isLastMove}
         onClick={onSquareClick ? () => onSquareClick(row, col) : undefined}
       />
     );
   };
 
   return (
-    <div className="bg-black p-6 inline-block rounded-sm">
-      <div className="grid grid-cols-8 gap-0 w-[640px] h-[640px]">
+    <div className="bg-black/80 p-2 inline-block rounded-2xl shadow-2xl">
+      <div className="grid grid-cols-8 gap-0 w-[clamp(320px,65vw,720px)] aspect-square rounded-2xl overflow-hidden">
         {Array.from({ length: 8 }, (_, row) =>
           Array.from({ length: 8 }, (_, col) => renderSquare(row, col))
         )}

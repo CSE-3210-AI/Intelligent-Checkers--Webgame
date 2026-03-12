@@ -1,3 +1,9 @@
 # Node.js backend dependencies
 node_modules/
 .env
+
+# Python backend artifacts
+__pycache__/
+*.pyc
+.venv/
+venv/

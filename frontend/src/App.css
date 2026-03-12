@@ -1,0 +1,46 @@
+
+/* Checkers Game UI enhancements */
+
+/* Board shadow and rounded corners are handled by Tailwind, but add fallback for older browsers */
+.board-container {
+	box-shadow: 0 8px 32px 0 rgba(0,0,0,0.35);
+	border-radius: 1.25rem;
+}
+
+/* Piece hover/selected/animation handled by Tailwind, but add smooth transitions for all children */
+.board-container .piece {
+	transition: transform 0.15s cubic-bezier(.4,2,.6,1), box-shadow 0.2s;
+}
+
+/* Responsive board scaling fallback */
+@media (max-width: 768px) {
+	.board-container .board {
+		width: 98vw !important;
+		height: 98vw !important;
+		min-width: 320px;
+		max-width: 720px;
+	}
+}
+
+/* Last move highlight pulse fallback */
+@keyframes last-move-pulse {
+	0% { box-shadow: 0 0 0 0 rgba(255, 221, 51, 0.7); }
+	70% { box-shadow: 0 0 0 8px rgba(255, 221, 51, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(255, 221, 51, 0); }
+}
+.last-move-outline {
+	animation: last-move-pulse 1.2s infinite;
+}
+
+/* Active player glow fallback */
+.active-player-glow {
+	box-shadow: 0 0 16px 4px rgba(0, 200, 255, 0.4), 0 0 0 2px #fff3;
+}
+
+/* Piece count highlight */
+.piece-count {
+	font-size: 1.5rem;
+	font-weight: bold;
+	letter-spacing: 0.05em;
+}
+

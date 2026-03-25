@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Home, Clock, Users, Loader2, Bot } from 'lucide-react';
+import { ArrowLeft, Bot, CircleHelp, Loader2, Settings, Users } from 'lucide-react';
 
 import Board from '../components/Board';
 import InitialBoard from '../components/InitialBoard';
@@ -365,96 +365,188 @@ const GamePage = () => {
 
   // Responsive container and layout
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-800 flex flex-col items-center justify-center p-4">
-      <div
-        className="w-full mx-auto game-grid"
-        style={{
-          maxWidth: '1200px',
-          margin: 'auto',
-          padding: '20px',
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: '24px',
-          alignItems: 'start',
-        }}
-      >
-
-        {/* Header */}
-        <div className="col-span-full mb-8 flex flex-row items-center justify-between gap-4">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-            size="lg"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-md"
-          >
-            <Home className="w-5 h-5 mr-2" />
-            Back
-          </Button>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-wider drop-shadow-lg"
-            style={{
-              letterSpacing: '0.06em',
-              textShadow: '0 2px 16px rgba(59,130,246,0.25), 0 1px 0 #000',
-            }}
-          >
-            Checkers Arena
-          </h1>
-          <div className="w-16" /> {/* Spacer for symmetry */}
+    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.25),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.18),transparent_40%),linear-gradient(180deg,#020617_0%,#081533_60%,#071225_100%)] text-slate-100">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/65 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => navigate(-1)}
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-lg font-semibold uppercase tracking-[0.22em] text-blue-100 md:text-xl">Checkers Arena</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
+              <CircleHelp className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      </header>
 
-        {/* Board column */}
-        <div className="flex flex-col items-center w-full game-board-col" style={{ minWidth: 0 }}>
-          {/* Mode header row (only for demo mode) */}
-          {mode === 'demo' && (
-            <div className="flex items-center justify-between mb-2 w-full">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 mr-4">
-                <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-md">
-                  {['initial', 'midgame', 'endgame', 'another'].map(tab => (
-                    <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      className="data-[state=active]:bg-white data-[state=active]:text-slate-900 capitalize"
-                    >
-                      {tab === 'midgame' ? 'Mid Game'
-                        : tab === 'endgame' ? 'End Game'
-                        : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-              <Button
-                onClick={handleNewGame}
-                disabled={loading}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold whitespace-nowrap"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : '▶ '}
-                Play Game
-              </Button>
-            </div>
-          )}
-          {/* Turn indicator with glow (for play mode) */}
-            {/* No separate turn indicator above the board; turn is shown in Game Status and highlighted in player card */}
-          {mode === 'play' && isAdibaMode && isFetchingAdibaMove && (
-            <div className="mb-3 px-4 py-2 rounded-md bg-slate-800/70 border border-slate-500/40 text-slate-100 text-sm flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Agent Adiba is thinking...</span>
-            </div>
-          )}
-          {/* API error banner */}
-          {apiError && (
-            <div className="mb-2 p-3 rounded-md bg-red-500/20 border border-red-400/40 text-red-200 text-sm text-center w-full">
-              {apiError}
-            </div>
-          )}
-          {/* Board */}
-          <div className="flex justify-center w-full">
-            {mode === 'demo' ? (
-              <div className="w-full flex justify-center">
-                {demoBoards[activeTab]}
-              </div>
-            ) : displayBoard ? (
-              <div className="w-full flex justify-center">
-                <div className="w-[clamp(420px,55vw,720px)] aspect-square">
+      <main className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-6 md:px-6 md:py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <section className="min-w-0 space-y-4 lg:col-span-3">
+            <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
+              <CardContent className="space-y-4 p-4">
+                <div className={`rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/25 text-blue-200">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm uppercase tracking-wide text-blue-200/80">Player 1</p>
+                        <p className="font-semibold text-white">Human</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">Blue</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
+                      <p className="text-[10px] uppercase tracking-wide text-slate-400">Captures</p>
+                      <p className="text-xl font-bold text-blue-200">{captures.blue}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
+                      <p className="text-[10px] uppercase tracking-wide text-slate-400">Pieces</p>
+                      <p className="text-xl font-bold text-blue-200">{pieceCounts.blue}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="bg-white/10" />
+
+                <div className={`rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? 'border-rose-300/50 bg-rose-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/25 text-rose-200">
+                        {isAdibaMode ? <Bot className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <p className="text-sm uppercase tracking-wide text-rose-200/80">Agent Adiba</p>
+                        <p className="font-semibold text-white">{isAdibaMode ? 'AI Opponent' : 'Player 2'}</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-rose-500/20 text-rose-100 hover:bg-rose-500/20">Red</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
+                      <p className="text-[10px] uppercase tracking-wide text-slate-400">Captures</p>
+                      <p className="text-xl font-bold text-rose-200">{captures.red}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
+                      <p className="text-[10px] uppercase tracking-wide text-slate-400">Pieces</p>
+                      <p className="text-xl font-bold text-rose-200">{pieceCounts.red}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {isAdibaMode && mode === 'play' && (
+              <Card className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 backdrop-blur-lg">
+                <CardContent className="flex items-center gap-3 p-4 text-sm text-cyan-100">
+                  <span className={`h-2.5 w-2.5 rounded-full ${isFetchingAdibaMove ? 'animate-pulse bg-cyan-300' : 'bg-cyan-300/70'}`} />
+                  <span>{isFetchingAdibaMove ? 'Agent Adiba is thinking...' : 'Agent Adiba is waiting for command.'}</span>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
+              <CardContent className="space-y-3 p-4">
+                <Button
+                  onClick={handleNewGame}
+                  disabled={loading || isFetchingAdibaMove}
+                  className="h-11 w-full rounded-xl bg-blue-500/80 font-semibold text-white hover:bg-blue-500"
+                >
+                  {(loading || isFetchingAdibaMove) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  New Game
+                </Button>
+
+                {isAdibaMode && mode === 'play' && (
+                  <Button
+                    onClick={handleAdibaMove}
+                    disabled={!isAiTurn || loading || isFetchingAdibaMove || !!winner}
+                    className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                  >
+                    {isFetchingAdibaMove && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isFetchingAdibaMove ? 'Thinking...' : 'Adiba Move'}
+                  </Button>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => {
+                      if (history.length > 0) {
+                        setShowLastMove(true);
+                        setTimeout(() => setShowLastMove(false), 2500);
+                      }
+                    }}
+                    variant="outline"
+                    className="h-11 rounded-xl border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
+                    disabled={!lastMove || isFetchingAdibaMove}
+                  >
+                    Last Move
+                  </Button>
+                  <Button
+                    onClick={() => setShowResignModal(true)}
+                    disabled={loading || isFetchingAdibaMove || !!winner || mode !== 'play'}
+                    variant="outline"
+                    className="h-11 rounded-xl border-rose-300/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
+                  >
+                    Resign
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="flex min-w-0 flex-col items-center justify-center space-y-4 overflow-hidden lg:col-span-6">
+            {mode === 'demo' && (
+              <Card className="w-full rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
+                <CardContent className="space-y-3 p-4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="grid w-full grid-cols-4 rounded-xl bg-slate-950/50">
+                      {['initial', 'midgame', 'endgame', 'another'].map((tab) => (
+                        <TabsTrigger
+                          key={tab}
+                          value={tab}
+                          className="capitalize data-[state=active]:bg-blue-300 data-[state=active]:text-slate-900"
+                        >
+                          {tab === 'midgame' ? 'Mid Game' : tab === 'endgame' ? 'End Game' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                  <Button
+                    onClick={handleNewGame}
+                    disabled={loading}
+                    className="h-11 w-full rounded-xl bg-emerald-500/90 font-semibold text-white hover:bg-emerald-500"
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Play Game
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {apiError && (
+              <Card className="w-full rounded-2xl border border-red-300/40 bg-red-500/15 backdrop-blur-xl">
+                <CardContent className="p-4 text-sm text-red-100">{apiError}</CardContent>
+              </Card>
+            )}
+
+            <div className="w-full">
+              {mode === 'demo' ? (
+                <div className="flex justify-center">{demoBoards[activeTab]}</div>
+              ) : displayBoard ? (
+                <div className="w-full">
                   <Board
                     pieces={displayBoard}
                     highlights={highlights}
@@ -464,280 +556,174 @@ const GamePage = () => {
                     onSquareClick={handleSquareClick}
                   />
                 </div>
-              </div>
-            ) : (
-              <div className="w-[clamp(420px,55vw,720px)] aspect-square bg-black/30 rounded flex items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-white/50" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="w-full max-w-full flex flex-col gap-6 game-sidebar-col" style={{ minWidth: 0 }}>
-          {/* Players card */}
-          <Card className="bg-white/10 border-white/20 backdrop-blur-md">
-            <CardContent className="p-6 space-y-4">
-              <div className={`flex items-center justify-between rounded-lg p-2 transition-colors ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'bg-blue-500/20 ring-2 ring-blue-400/80 shadow-blue-400/40 shadow-lg' : ''}`}
-                style={mode === 'play' && !winner && currentPlayer === 'blue' ? { boxShadow: '0 0 12px 2px #3b82f6, 0 0 0 4px #3b82f6' } : {}}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">Player 1</p>
-                    <p className="text-white/60 text-sm">Blue Pieces</p>
-                  </div>
+              ) : (
+                <div className="flex aspect-square items-center justify-center rounded-2xl border border-white/10 bg-slate-950/60">
+                  <Loader2 className="h-10 w-10 animate-spin text-slate-300/60" />
                 </div>
-                <Badge className="bg-blue-500 hover:bg-blue-600 text-white">{pieceCounts.blue}</Badge>
+              )}
+            </div>
+
+            <div className="mx-auto flex w-full items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-5 py-3">
+              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Turn</span>
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                <span className={`h-2.5 w-2.5 rounded-full ${currentPlayer === 'blue' ? 'bg-blue-300' : 'bg-rose-300'} ${mode === 'play' && !winner ? 'animate-pulse' : ''}`} />
+                {currentPlayer === 'blue' ? 'Player 1' : isAdibaMode ? 'Agent Adiba' : 'Player 2'}
               </div>
+            </div>
+          </section>
 
-              <Separator className="bg-white/20" />
-
-              <div className={`flex items-center justify-between rounded-lg p-2 transition-colors ${mode === 'play' && !winner && currentPlayer === 'red' ? 'bg-red-500/20 ring-2 ring-red-400/80 shadow-red-400/40 shadow-lg' : ''}`}
-                style={mode === 'play' && !winner && currentPlayer === 'red' ? { boxShadow: '0 0 12px 2px #ef4444, 0 0 0 4px #ef4444' } : {}}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
-                    {isAdibaMode ? <Bot className="w-5 h-5 text-white" /> : <Users className="w-5 h-5 text-white" />}
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">{isAdibaMode ? 'Agent Adiba' : 'Player 2'}</p>
-                    <p className="text-white/60 text-sm">{isAdibaMode ? 'AI Opponent (Red)' : 'Red Pieces'}</p>
-                  </div>
+          <section className="min-w-0 space-y-4 lg:col-span-3">
+            <Card className="w-full rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Game Status</h3>
+                  <Badge className="bg-white/10 text-slate-200 hover:bg-white/15">Live</Badge>
                 </div>
-                <Badge className="bg-red-500 hover:bg-red-600 text-white">{pieceCounts.red}</Badge>
-              </div>
-            </CardContent>
-          </Card>
 
-            {/* Game Status */}
-            <Card className="bg-white/10 border-white/20 backdrop-blur-md">
-              <CardContent className="p-6 space-y-3">
-                <h3 className="text-white font-bold text-lg mb-4">Game Status</h3>
-                <div className="space-y-2">
-                  <div className="space-y-2 pb-2 mb-1 border-b border-white/10">
-                    <span className="text-white/70 text-xs uppercase tracking-wide">Select Mode</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        onClick={() => setGameMode('human-vs-human')}
-                        variant={gameMode === 'human-vs-human' ? 'default' : 'outline'}
-                        className={gameMode === 'human-vs-human'
-                          ? 'bg-white text-slate-900 hover:bg-slate-100 text-xs h-8'
-                          : 'text-white border-white/20 bg-white/5 hover:bg-white/15 text-xs h-8'}
-                      >
-                        Human vs Human
-                      </Button>
-                      <Button
-                        onClick={() => setGameMode('human-vs-adiba')}
-                        variant={gameMode === 'human-vs-adiba' ? 'default' : 'outline'}
-                        className={gameMode === 'human-vs-adiba'
-                          ? 'bg-white text-slate-900 hover:bg-slate-100 text-xs h-8'
-                          : 'text-white border-white/20 bg-white/5 hover:bg-white/15 text-xs h-8'}
-                      >
-                        Human vs Agent Adiba
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70 text-sm">Game Mode</span>
-                    <span className="text-white font-semibold text-sm">
-                      {isAdibaMode ? 'Human vs Agent Adiba' : 'Human vs Human'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70 text-sm">Current Turn</span>
-                    <span className={currentPlayer === 'blue' ? 'text-blue-300 font-semibold' : 'text-red-300 font-semibold'}>
-                      {currentPlayer === 'blue' ? 'Blue' : (isAdibaMode ? 'Agent Adiba' : 'Red')}
-                    </span>
-                  </div>
-                  {isAdibaMode && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">AI Tactical Mode</span>
-                      <span className="text-emerald-300 font-semibold text-sm">
-                        {lastAdibaDecision?.strategy ?? currentStrategyLabel}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70 text-sm">Timer</span>
-                    <span className="text-white font-semibold text-sm">{timerText}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70 text-sm">Move Count</span>
-                    <span className="text-white font-semibold">{moveCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70 text-sm">Captures</span>
-                    <span className="text-white font-semibold">{captures.blue} – {captures.red}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <Card className="bg-white/10 border-white/20 backdrop-blur-md">
-              <CardContent className="p-6 space-y-3 flex flex-col">
-                <Button
-                  onClick={handleNewGame}
-                  disabled={loading || isFetchingAdibaMove}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold"
-                  size="lg"
-                >
-                  {(loading || isFetchingAdibaMove) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  New Game
-                </Button>
-                {isAdibaMode && mode === 'play' && (
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-slate-950/45 p-1">
                   <Button
-                    onClick={handleAdibaMove}
-                    disabled={!isAiTurn || loading || isFetchingAdibaMove || !!winner}
-                    className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold disabled:opacity-60"
-                    size="lg"
+                    onClick={() => setGameMode('human-vs-human')}
+                    variant={gameMode === 'human-vs-human' ? 'default' : 'ghost'}
+                    className={gameMode === 'human-vs-human' ? 'h-8 rounded-lg bg-blue-300 text-slate-900 hover:bg-blue-200' : 'h-8 rounded-lg text-slate-300 hover:bg-white/10'}
                   >
-                    {isFetchingAdibaMove && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    {isFetchingAdibaMove ? 'Thinking...' : 'Adiba Move'}
+                    PvP
                   </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    if (history.length > 0) {
-                      setShowLastMove(true);
-                      setTimeout(() => setShowLastMove(false), 2500);
-                    }
-                  }}
-                  variant={showLastMove ? 'default' : 'outline'}
-                  className={showLastMove ? 'w-full bg-yellow-400 text-black font-semibold' : 'w-full text-white border-white/20 bg-white/10 hover:bg-white/20'}
-                  disabled={!lastMove || isFetchingAdibaMove}
-                  size="lg"
-                >
-                  Last Move
-                </Button>
-                <Button
-                  onClick={() => setShowResignModal(true)}
-                  disabled={loading || isFetchingAdibaMove || !!winner || mode !== 'play'}
-                  className="w-full"
-                  variant="outline"
-                  size="lg"
-                >
-                  Resign
-                </Button>
+                  <Button
+                    onClick={() => setGameMode('human-vs-adiba')}
+                    variant={gameMode === 'human-vs-adiba' ? 'default' : 'ghost'}
+                    className={gameMode === 'human-vs-adiba' ? 'h-8 rounded-lg bg-blue-300 text-slate-900 hover:bg-blue-200' : 'h-8 rounded-lg text-slate-300 hover:bg-white/10'}
+                  >
+                    PvAgent
+                  </Button>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Game Mode</span>
+                    <span className="font-medium text-slate-100">{isAdibaMode ? 'Human vs Agent Adiba' : 'Human vs Human'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">AI Tactical Mode</span>
+                    <Badge className="bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/15">{lastAdibaDecision?.strategy ?? currentStrategyLabel}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Timer</span>
+                    <span className="font-medium text-slate-100">{timerText}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Move Count</span>
+                    <span className="font-medium text-slate-100">{moveCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Captures</span>
+                    <span className="font-medium text-slate-100">{captures.blue} - {captures.red}</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {isAdibaMode && mode === 'play' && (
-              <Card className="bg-white/10 border-white/20 backdrop-blur-md">
-                <CardContent className="p-6 space-y-3">
-                  <h3 className="text-white font-bold text-lg">Agent Adiba Strategy</h3>
-                  <p className="text-emerald-300 font-semibold text-sm">
-                    {lastAdibaDecision?.strategy ?? currentStrategyLabel}
-                  </p>
-                  <div className="space-y-1 text-sm">
-                    <p className="text-white/70">Adiba played</p>
-                    <p className="text-white font-semibold">
-                      {lastAdibaDecision?.move_text ? `Adiba played: ${lastAdibaDecision.move_text}` : 'Waiting for Adiba Move button...'}
+              <Card className="w-full rounded-2xl border border-cyan-300/40 bg-cyan-500/10 backdrop-blur-xl">
+                <CardContent className="space-y-4 p-4">
+                  <h3 className="text-lg font-semibold text-cyan-100">Adiba Strategy</h3>
+
+                  <div className="space-y-1.5 text-sm">
+                    <p className="text-cyan-100/80">Chosen Move</p>
+                    <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-slate-100">
+                      {lastAdibaDecision?.move_text ?? 'Waiting for Adiba Move button...'}
                     </p>
                   </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="text-white/70">Win Probability</p>
-                    <p className="text-white font-semibold">
-                      {lastAdibaDecision ? `${Math.round(lastAdibaDecision.win_probability * 100)}%` : '—'}
-                    </p>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <p className="text-cyan-100/80">Win Probability</p>
+                      <p className="font-semibold text-cyan-100">
+                        {lastAdibaDecision ? `${Math.round(lastAdibaDecision.win_probability * 100)}%` : '—'}
+                      </p>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
+                      <div
+                        className="h-full rounded-full bg-cyan-300 transition-all duration-500"
+                        style={{ width: `${Math.max(0, Math.min(100, Math.round((lastAdibaDecision?.win_probability ?? 0) * 100)))}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="text-white/70">Explanation</p>
-                    <p className="text-white/90 leading-relaxed">
+
+                  <div className="space-y-1.5 text-sm">
+                    <p className="text-cyan-100/80">Explanation</p>
+                    <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-slate-100/95">
                       {lastAdibaDecision?.explanation ?? 'Agent Adiba will explain each move once a decision is made.'}
                     </p>
                   </div>
                 </CardContent>
               </Card>
             )}
-        {/* Resign Confirmation Modal */}
-        {showResignModal && (
-          <div className="fixed inset-0 bg-black/65 flex items-center justify-center z-50">
-            <Card className="bg-slate-800 border-white/20 max-w-sm w-full mx-4">
-              <CardContent className="p-8 text-center space-y-6">
-                <h2 className="text-2xl font-extrabold text-white mb-2">Are you sure you want to resign?</h2>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={() => navigate(-1)}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold"
-                    size="lg"
-                  >
-                    Exit Game
-                  </Button>
-                  <Button
-                    onClick={() => { setShowResignModal(false); handleNewGame(); }}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
-                    size="lg"
-                  >
-                    Start New Game
-                  </Button>
-                  <Button
-                    onClick={() => setShowResignModal(false)}
-                    className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold"
-                    size="lg"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-          </div>
+          </section>
         </div>
 
-        {/* Info bar */}
-        <Card className="mt-8 bg-white/10 border-white/20 backdrop-blur-md w-full col-span-full">
-                {/* Responsive styles */}
-                <style>{`
-                  @media (max-width: 768px) {
-                    .game-grid {
-                      display: flex !important;
-                      flex-direction: column !important;
-                      gap: 20px !important;
-                    }
-                    .game-board-col, .game-sidebar-col {
-                      width: 100% !important;
-                      min-width: 0 !important;
-                    }
-                  }
-                `}</style>
-          <CardContent className="p-6">
-            <p className="text-white/80 text-center text-sm">
-              {mode === 'demo'
-                ? 'DEMO MODE – Click a tab to preview board states. Click "▶ Play Game" to start a real match.'
-                : isAdibaMode
-                  ? 'PLAYING – Human is Blue, Agent Adiba is Red. Click "Adiba Move" on red turn to fetch and apply the AI move instantly.'
-                  : 'PLAYING – Click a piece to select it, then click a highlighted square to move. Captures are mandatory. Multi-jumps complete in one turn. Use the Last Move button to highlight the previous move.'}
-            </p>
+        <Card className="mt-6 rounded-2xl border border-white/10 bg-slate-900/45 backdrop-blur-xl">
+          <CardContent className="p-4 text-sm text-slate-300">
+            {mode === 'demo'
+              ? 'Demo mode is active. Pick a board snapshot or press Play Game to start a match.'
+              : isAdibaMode
+                ? 'Human is Blue and Agent Adiba is Red. Trigger Adiba using the Adiba Move button when it is red turn.'
+                : 'Click a piece, then click a highlighted square. Captures are mandatory and multi-jumps complete in one turn.'}
           </CardContent>
         </Card>
+      </main>
 
-        {winner && mode === 'play' && (
-          <div className="fixed inset-0 bg-black/65 flex items-center justify-center z-50">
-            <Card className="bg-slate-800 border-white/20 max-w-sm w-full mx-4">
-              <CardContent className="p-8 text-center space-y-4">
-                <div className="text-6xl">🏆</div>
-                <h2 className="text-3xl font-extrabold text-white">
-                  {winner === 'blue'
-                    ? 'Player 1 (Blue)'
-                    : (isAdibaMode ? 'Agent Adiba (Red)' : 'Player 2 (Red)')} Wins!
-                </h2>
-                <p className="text-white/70">Game over – start a new match?</p>
+      {showResignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
+          <Card className="w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
+            <CardContent className="space-y-5 p-6 text-center">
+              <h2 className="text-xl font-bold text-white">Are you sure you want to resign?</h2>
+              <div className="space-y-2">
                 <Button
-                  onClick={handleNewGame}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold"
-                  size="lg"
+                  onClick={() => navigate(-1)}
+                  className="h-11 w-full rounded-xl bg-amber-500 text-white hover:bg-amber-400"
                 >
-                  New Game
+                  Exit Game
                 </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
+                <Button
+                  onClick={() => { setShowResignModal(false); handleNewGame(); }}
+                  className="h-11 w-full rounded-xl bg-emerald-500 text-white hover:bg-emerald-400"
+                >
+                  Start New Game
+                </Button>
+                <Button
+                  onClick={() => setShowResignModal(false)}
+                  className="h-11 w-full rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {winner && mode === 'play' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
+          <Card className="w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
+            <CardContent className="space-y-4 p-7 text-center">
+              <div className="text-5xl">🏆</div>
+              <h2 className="text-3xl font-extrabold text-white">
+                {winner === 'blue'
+                  ? 'Player 1 (Blue)'
+                  : (isAdibaMode ? 'Agent Adiba (Red)' : 'Player 2 (Red)')} Wins!
+              </h2>
+              <p className="text-slate-300">Game over - start a new match?</p>
+              <Button
+                onClick={handleNewGame}
+                className="h-11 w-full rounded-xl bg-amber-500 text-white hover:bg-amber-400"
+              >
+                New Game
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
 

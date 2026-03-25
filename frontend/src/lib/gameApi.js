@@ -107,6 +107,21 @@ export async function getAgentAdibaMove(board, player = "red") {
   return post('/agent-adiba-move', { board, player });
 }
 
+/**
+ * getExternalAgentMove(board, player)
+ *
+ * Request the external benchmark agent's next move from the backend.
+ *
+ * Response:
+ * {
+ *   move: { from, to, isJump, captures },
+ *   agent: "external"
+ * }
+ */
+export async function getExternalAgentMove(board, player = "red") {
+  return post('/agent-external-move', { board, player });
+}
+
 // ── Board format conversion ───────────────────────────────────────────────
 
 /**

@@ -12,6 +12,7 @@ from game.board import initializeBoard
 from game.gameState import executeTurn
 from game.moveGenerator import getLegalMoves
 from services.agentAdiba.agent_adiba import get_agent_adiba_move
+from services.externalAgent.external_agent import ExternalAgent
 
 
 class LegalMovesRequest(BaseModel):
@@ -42,6 +43,14 @@ class MoveRequest(BaseModel):
 class AgentAdibaRequest(BaseModel):
     board: list[list[Any | None]]
     player: str = "red"
+
+
+class ExternalAgentRequest(BaseModel):
+    board: list[list[Any | None]]
+    player: str = "red"
+
+
+_external_agent = ExternalAgent()
 
 
 async def initGame():
@@ -185,6 +194,32 @@ async def getAgentAdibaMove(payload: AgentAdibaRequest | dict[str, Any]):
             "phase": result.get("phase"),
             "win_probability": result.get("win_probability"),
             "explanation": result.get("explanation"),
+        }
+    except Exception as err:
+        return {"error": str(err)}, 500
+
+
+async def getExternalAgentMove(payload: ExternalAgentRequest | dict[str, Any]):
+    try:
+        if not isinstance(payload, ExternalAgentRequest):
+            try:
+                payload = ExternalAgentRequest.model_validate(payload)
+            except ValidationError:
+                return {"error": '"board" is required and "player" is optional.'}, 400
+
+        board = payload.board
+        player = payload.player or "red"
+
+        if not board:
+            return {"error": '"board" is required.'}, 400
+
+        if player not in ("blue", "red"):
+            return {"error": '"player" must be "blue" or "red".'}, 400
+
+        move = _external_agent.get_move({"board": board, "currentPlayer": player})
+        return {
+            "move": move,
+            "agent": "external",
         }
     except Exception as err:
         return {"error": str(err)}, 500

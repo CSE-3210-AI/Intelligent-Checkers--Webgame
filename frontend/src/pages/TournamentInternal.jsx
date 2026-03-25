@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function TournamentInternal() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
       <button
         type="button"
         aria-label="Go back"
@@ -14,7 +14,7 @@ export default function TournamentInternal() {
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
         Internal AI Tournament
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
@@ -47,7 +47,11 @@ export default function TournamentInternal() {
           </p>
         </div>
       </div>
-      <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-10 py-4 text-lg shadow-lg hover:shadow-xl transition-all">
+      <Button
+        size="lg"
+        onClick={() => navigate('/game?mode=internal-tournament')}
+        className="bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-10 py-4 text-lg shadow-lg hover:shadow-xl transition-all"
+      >
         Start Match
       </Button>
     </div>

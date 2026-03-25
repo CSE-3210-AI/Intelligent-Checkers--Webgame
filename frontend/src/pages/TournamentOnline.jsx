@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 export default function TournamentOnline() {
-  const [selected, setSelected] = useState('megha');
+  const [selected, setSelected] = useState('adiba');
   const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
       <button
         type="button"
         aria-label="Go back"
@@ -16,12 +17,11 @@ export default function TournamentOnline() {
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
         Online Benchmark Tournament
       </h1>
       <h2 className="text-2xl font-bold text-center mb-8 text-slate-800">Select Your Internal Agent</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
-        {/* Agent Megha */}
         <div
           className={`bg-white rounded-xl shadow-lg p-8 flex flex-col items-center border-2 cursor-pointer transition-all duration-200 ${selected === 'megha' ? 'border-blue-600 ring-2 ring-blue-300' : 'border-blue-200 hover:border-blue-400'}`}
           onClick={() => setSelected('megha')}
@@ -38,7 +38,6 @@ export default function TournamentOnline() {
             Uses a planning-based approach to evaluate future board states, efficiently pruning suboptimal moves. Excels at deep tactical foresight and optimal decision making under deterministic conditions.
           </p>
         </div>
-        {/* Agent Adiba */}
         <div
           className={`bg-white rounded-xl shadow-lg p-8 flex flex-col items-center border-2 cursor-pointer transition-all duration-200 ${selected === 'adiba' ? 'border-slate-700 ring-2 ring-slate-400' : 'border-slate-400 hover:border-slate-600'}`}
           onClick={() => setSelected('adiba')}
@@ -56,7 +55,11 @@ export default function TournamentOnline() {
           </p>
         </div>
       </div>
-      <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-10 py-4 text-lg shadow-lg hover:shadow-xl transition-all">
+      <Button
+        size="lg"
+        onClick={() => navigate(`/game?mode=online-benchmark&internalAgent=${selected}`)}
+        className="bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-10 py-4 text-lg shadow-lg hover:shadow-xl transition-all"
+      >
         Start Benchmark
       </Button>
     </div>

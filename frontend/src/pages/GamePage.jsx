@@ -64,8 +64,8 @@ function buildPlayersForMode(gameMode, params) {
 
   if (gameMode === 'internal-ai-tournament') {
     return {
-      blue: { name: 'Internal AI 1', type: 'internal_ai', agentKey: 'megha' },
-      red: { name: 'Internal AI 2', type: 'internal_ai', agentKey: 'adiba' },
+      blue: { name: 'Agent Megha', type: 'internal_ai', agentKey: 'megha' },
+      red: { name: 'Agent Adiba', type: 'internal_ai', agentKey: 'adiba' },
     };
   }
 

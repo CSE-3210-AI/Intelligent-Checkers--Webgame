@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Home, Clock, Users, Loader2 } from 'lucide-react';
+import { Home, Clock, Users, Loader2, Bot } from 'lucide-react';
 
 import Board from '../components/Board';
 import InitialBoard from '../components/InitialBoard';
@@ -18,7 +18,22 @@ import {
   fetchLegalMoves,
   sendMove,
   toDisplayBoard,
+  getAgentAdibaMove,
 } from '../lib/gameApi';
+import {
+  detectGamePhase,
+  getPhaseStrategyLabel,
+} from '../lib/agentAdiba';
+
+const opposite = (player) => (player === 'blue' ? 'red' : 'blue');
+
+function formatMoveText(move) {
+  if (!move?.from || !move?.to?.length) return 'Unknown move';
+  const [fr, fc] = move.from;
+  const [tr, tc] = move.to[move.to.length - 1];
+  const toCoord = (r, c) => `${String.fromCharCode(65 + c)}${8 - r}`;
+  return `${toCoord(fr, fc)} -> ${toCoord(tr, tc)}`;
+}
 
 function countEngineBoard(board) {
   if (!board) return { blue: 12, red: 12 };
@@ -36,6 +51,7 @@ const GamePage = () => {
   const [searchParams] = useSearchParams();
 
   const [mode, setMode]           = useState('demo');
+  const [gameMode, setGameMode]   = useState('human-vs-human');
   const [activeTab, setActiveTab] = useState('initial');
 
   const [engineBoard,    setEngineBoard]    = useState(null);
@@ -57,6 +73,8 @@ const GamePage = () => {
 
   const [loading,  setLoading]  = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [isFetchingAdibaMove, setIsFetchingAdibaMove] = useState(false);
+  const [lastAdibaDecision, setLastAdibaDecision] = useState(null);
 
   const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed,   setElapsed]   = useState(0);
@@ -79,6 +97,19 @@ const GamePage = () => {
   const pieceCounts = useMemo(
     () => countEngineBoard(engineBoard),
     [engineBoard]
+  );
+
+  const isAdibaMode = gameMode === 'human-vs-adiba';
+  const isAiTurn = mode === 'play' && isAdibaMode && currentPlayer === 'red' && !winner;
+
+  const currentPhase = useMemo(() => {
+    if (!displayBoard) return 'Opening';
+    return detectGamePhase(displayBoard);
+  }, [displayBoard]);
+
+  const currentStrategyLabel = useMemo(
+    () => getPhaseStrategyLabel(currentPhase),
+    [currentPhase]
   );
 
   const loadLegalMoves = useCallback(async (board, player) => {
@@ -113,6 +144,8 @@ const GamePage = () => {
       setHighlights([]);
       setLastMove(null);
       setShowLastMove(false);
+      setIsFetchingAdibaMove(false);
+      setLastAdibaDecision(null);
       setMode('play');
       setStartTime(Date.now());
       setElapsed(0);
@@ -127,6 +160,10 @@ const GamePage = () => {
   // Auto-start when navigated with ?autostart=true
   useEffect(() => {
     if (searchParams.get('autostart') === 'true') {
+      setGameMode('human-vs-human');
+      handleNewGame();
+    } else if (searchParams.get('mode') === 'agent-adiba') {
+      setGameMode('human-vs-adiba');
       handleNewGame();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,7 +206,7 @@ const GamePage = () => {
   };
 
   const handleSquareClick = async (row, col) => {
-    if (loading || winner || mode !== 'play') return;
+    if (loading || isFetchingAdibaMove || winner || mode !== 'play' || isAiTurn) return;
 
     if (selected && highlights.some(([r, c]) => r === row && c === col)) {
       const move = legalMoves.find(
@@ -197,7 +234,13 @@ const GamePage = () => {
           setLastMove({ from: move.from, to: move.to[0] });
           setShowLastMove(true);
           if (!result.winner) {
-            await loadLegalMoves(result.board, result.currentPlayer);
+            if (isAdibaMode && result.currentPlayer === 'red') {
+              setLegalMoves([]);
+              setMoveableSet(new Set());
+              setDestinationMap({});
+            } else {
+              await loadLegalMoves(result.board, result.currentPlayer);
+            }
           } else {
             setLegalMoves([]);
             setMoveableSet(new Set());
@@ -222,6 +265,89 @@ const GamePage = () => {
 
     setSelected(null);
     setHighlights([]);
+  };
+
+  const handleAdibaMove = async () => {
+    if (!isAiTurn || !engineBoard || loading || isFetchingAdibaMove) return;
+    if (currentPlayer !== 'red') {
+      console.error('WRONG TURN - AI SHOULD NOT MOVE');
+      return;
+    }
+
+    setIsFetchingAdibaMove(true);
+    setApiError(null);
+    setSelected(null);
+    setHighlights([]);
+
+    try {
+      console.log('TURN STATE:', currentPlayer);
+      console.log('CALLING AI FOR:', 'red');
+      console.log('BOARD SENT TO AI:', engineBoard);
+
+      const decision = await getAgentAdibaMove(engineBoard, 'red');
+      console.log('AI RESPONSE:', decision);
+
+      if (decision?.error) {
+        setApiError(`AI failed to generate move: ${decision.error}`);
+        setLastAdibaDecision({
+          move: null,
+          move_text: 'No move generated',
+          win_probability: 0,
+          explanation: decision.error,
+          phase: decision?.phase,
+        });
+        return;
+      }
+
+      if (!decision?.move) {
+        if (decision?.game_over === true) {
+          setWinner(opposite(currentPlayer));
+        } else {
+          setApiError('AI failed to generate move');
+        }
+        setLastAdibaDecision({
+          move: null,
+          move_text: 'No move generated',
+          win_probability: 0,
+          explanation: decision?.explanation ?? 'AI failed to generate move',
+          phase: decision?.phase,
+        });
+        if (decision?.game_over === true) {
+          setLegalMoves([]);
+          setMoveableSet(new Set());
+          setDestinationMap({});
+        }
+        return;
+      }
+
+      const snapshot = { engineBoard, currentPlayer, moveCount, captures };
+      const result = await sendMove(engineBoard, decision.move, currentPlayer, captures, moveCount);
+
+      setHistory(prev => [...prev, snapshot]);
+      setEngineBoard(result.board);
+      setCurrentPlayer(result.currentPlayer);
+      setMoveCount(result.moveCount);
+      setCaptures(result.captures);
+      setWinner(result.winner);
+      setLastMove({ from: decision.move.from, to: decision.move.to[0] });
+      setShowLastMove(true);
+      setLastAdibaDecision({
+        ...decision,
+        move_text: decision.move_text ?? formatMoveText(decision.move),
+      });
+
+      if (!result.winner) {
+        await loadLegalMoves(result.board, result.currentPlayer);
+      } else {
+        setLegalMoves([]);
+        setMoveableSet(new Set());
+        setDestinationMap({});
+      }
+    } catch (err) {
+      setApiError(`Agent Adiba failed to move: ${err.message}`);
+    } finally {
+      setIsFetchingAdibaMove(false);
+    }
   };
 
   const demoBoards = {
@@ -308,6 +434,12 @@ const GamePage = () => {
           )}
           {/* Turn indicator with glow (for play mode) */}
             {/* No separate turn indicator above the board; turn is shown in Game Status and highlighted in player card */}
+          {mode === 'play' && isAdibaMode && isFetchingAdibaMove && (
+            <div className="mb-3 px-4 py-2 rounded-md bg-slate-800/70 border border-slate-500/40 text-slate-100 text-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Agent Adiba is thinking...</span>
+            </div>
+          )}
           {/* API error banner */}
           {apiError && (
             <div className="mb-2 p-3 rounded-md bg-red-500/20 border border-red-400/40 text-red-200 text-sm text-center w-full">
@@ -366,11 +498,11 @@ const GamePage = () => {
                 style={mode === 'play' && !winner && currentPlayer === 'red' ? { boxShadow: '0 0 12px 2px #ef4444, 0 0 0 4px #ef4444' } : {}}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
+                    {isAdibaMode ? <Bot className="w-5 h-5 text-white" /> : <Users className="w-5 h-5 text-white" />}
                   </div>
                   <div>
-                    <p className="text-white font-semibold">Player 2</p>
-                    <p className="text-white/60 text-sm">Red Pieces</p>
+                    <p className="text-white font-semibold">{isAdibaMode ? 'Agent Adiba' : 'Player 2'}</p>
+                    <p className="text-white/60 text-sm">{isAdibaMode ? 'AI Opponent (Red)' : 'Red Pieces'}</p>
                   </div>
                 </div>
                 <Badge className="bg-red-500 hover:bg-red-600 text-white">{pieceCounts.red}</Badge>
@@ -383,16 +515,49 @@ const GamePage = () => {
               <CardContent className="p-6 space-y-3">
                 <h3 className="text-white font-bold text-lg mb-4">Game Status</h3>
                 <div className="space-y-2">
+                  <div className="space-y-2 pb-2 mb-1 border-b border-white/10">
+                    <span className="text-white/70 text-xs uppercase tracking-wide">Select Mode</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        onClick={() => setGameMode('human-vs-human')}
+                        variant={gameMode === 'human-vs-human' ? 'default' : 'outline'}
+                        className={gameMode === 'human-vs-human'
+                          ? 'bg-white text-slate-900 hover:bg-slate-100 text-xs h-8'
+                          : 'text-white border-white/20 bg-white/5 hover:bg-white/15 text-xs h-8'}
+                      >
+                        Human vs Human
+                      </Button>
+                      <Button
+                        onClick={() => setGameMode('human-vs-adiba')}
+                        variant={gameMode === 'human-vs-adiba' ? 'default' : 'outline'}
+                        className={gameMode === 'human-vs-adiba'
+                          ? 'bg-white text-slate-900 hover:bg-slate-100 text-xs h-8'
+                          : 'text-white border-white/20 bg-white/5 hover:bg-white/15 text-xs h-8'}
+                      >
+                        Human vs Agent Adiba
+                      </Button>
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-white/70 text-sm">Game Mode</span>
-                    <span className="text-white font-semibold text-sm">Human vs Human</span>
+                    <span className="text-white font-semibold text-sm">
+                      {isAdibaMode ? 'Human vs Agent Adiba' : 'Human vs Human'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-white/70 text-sm">Current Turn</span>
                     <span className={currentPlayer === 'blue' ? 'text-blue-300 font-semibold' : 'text-red-300 font-semibold'}>
-                      {currentPlayer === 'blue' ? 'Blue' : 'Red'}
+                      {currentPlayer === 'blue' ? 'Blue' : (isAdibaMode ? 'Agent Adiba' : 'Red')}
                     </span>
                   </div>
+                  {isAdibaMode && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">AI Tactical Mode</span>
+                      <span className="text-emerald-300 font-semibold text-sm">
+                        {lastAdibaDecision?.strategy ?? currentStrategyLabel}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-white/70 text-sm">Timer</span>
                     <span className="text-white font-semibold text-sm">{timerText}</span>
@@ -414,13 +579,24 @@ const GamePage = () => {
               <CardContent className="p-6 space-y-3 flex flex-col">
                 <Button
                   onClick={handleNewGame}
-                  disabled={loading}
+                  disabled={loading || isFetchingAdibaMove}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold"
                   size="lg"
                 >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {(loading || isFetchingAdibaMove) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                   New Game
                 </Button>
+                {isAdibaMode && mode === 'play' && (
+                  <Button
+                    onClick={handleAdibaMove}
+                    disabled={!isAiTurn || loading || isFetchingAdibaMove || !!winner}
+                    className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold disabled:opacity-60"
+                    size="lg"
+                  >
+                    {isFetchingAdibaMove && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {isFetchingAdibaMove ? 'Thinking...' : 'Adiba Move'}
+                  </Button>
+                )}
                 <Button
                   onClick={() => {
                     if (history.length > 0) {
@@ -430,14 +606,14 @@ const GamePage = () => {
                   }}
                   variant={showLastMove ? 'default' : 'outline'}
                   className={showLastMove ? 'w-full bg-yellow-400 text-black font-semibold' : 'w-full text-white border-white/20 bg-white/10 hover:bg-white/20'}
-                  disabled={!lastMove}
+                  disabled={!lastMove || isFetchingAdibaMove}
                   size="lg"
                 >
                   Last Move
                 </Button>
                 <Button
                   onClick={() => setShowResignModal(true)}
-                  disabled={loading || !!winner || mode !== 'play'}
+                  disabled={loading || isFetchingAdibaMove || !!winner || mode !== 'play'}
                   className="w-full"
                   variant="outline"
                   size="lg"
@@ -446,6 +622,35 @@ const GamePage = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {isAdibaMode && mode === 'play' && (
+              <Card className="bg-white/10 border-white/20 backdrop-blur-md">
+                <CardContent className="p-6 space-y-3">
+                  <h3 className="text-white font-bold text-lg">Agent Adiba Strategy</h3>
+                  <p className="text-emerald-300 font-semibold text-sm">
+                    {lastAdibaDecision?.strategy ?? currentStrategyLabel}
+                  </p>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-white/70">Adiba played</p>
+                    <p className="text-white font-semibold">
+                      {lastAdibaDecision?.move_text ? `Adiba played: ${lastAdibaDecision.move_text}` : 'Waiting for Adiba Move button...'}
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-white/70">Win Probability</p>
+                    <p className="text-white font-semibold">
+                      {lastAdibaDecision ? `${Math.round(lastAdibaDecision.win_probability * 100)}%` : '—'}
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-white/70">Explanation</p>
+                    <p className="text-white/90 leading-relaxed">
+                      {lastAdibaDecision?.explanation ?? 'Agent Adiba will explain each move once a decision is made.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
         {/* Resign Confirmation Modal */}
         {showResignModal && (
           <div className="fixed inset-0 bg-black/65 flex items-center justify-center z-50">
@@ -503,7 +708,9 @@ const GamePage = () => {
             <p className="text-white/80 text-center text-sm">
               {mode === 'demo'
                 ? 'DEMO MODE – Click a tab to preview board states. Click "▶ Play Game" to start a real match.'
-                : 'PLAYING – Click a piece to select it, then click a highlighted square to move. Captures are mandatory. Multi-jumps complete in one turn. Use the Last Move button to highlight the previous move.'}
+                : isAdibaMode
+                  ? 'PLAYING – Human is Blue, Agent Adiba is Red. Click "Adiba Move" on red turn to fetch and apply the AI move instantly.'
+                  : 'PLAYING – Click a piece to select it, then click a highlighted square to move. Captures are mandatory. Multi-jumps complete in one turn. Use the Last Move button to highlight the previous move.'}
             </p>
           </CardContent>
         </Card>
@@ -514,7 +721,9 @@ const GamePage = () => {
               <CardContent className="p-8 text-center space-y-4">
                 <div className="text-6xl">🏆</div>
                 <h2 className="text-3xl font-extrabold text-white">
-                  {winner === 'blue' ? 'Player 1 (Blue)' : 'Player 2 (Red)'} Wins!
+                  {winner === 'blue'
+                    ? 'Player 1 (Blue)'
+                    : (isAdibaMode ? 'Agent Adiba (Red)' : 'Player 2 (Red)')} Wins!
                 </h2>
                 <p className="text-white/70">Game over – start a new match?</p>
                 <Button

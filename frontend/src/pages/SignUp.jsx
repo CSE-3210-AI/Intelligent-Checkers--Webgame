@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseConfigError } from '@/lib/supabase';
 import { ArrowLeft } from 'lucide-react';
 
 export default function SignUp() {
@@ -10,6 +10,10 @@ export default function SignUp() {
   const { login } = useUser();
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!isSupabaseConfigured) {
+      alert(supabaseConfigError);
+      return;
+    }
     const form = e.target;
     const username = form[0].value;
     const email = form[1].value;

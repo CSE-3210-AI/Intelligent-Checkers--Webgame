@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, ValidationError
 from game.board import initializeBoard
 from game.gameState import executeTurn
 from game.moveGenerator import getLegalMoves
+from services.agentAdiba.agent_adiba import get_agent_adiba_move
 
 
 class LegalMovesRequest(BaseModel):
@@ -36,6 +37,11 @@ class MoveRequest(BaseModel):
     currentPlayer: str
     captures: CapturesModel = Field(default_factory=CapturesModel)
     moveCount: int = 0
+
+
+class AgentAdibaRequest(BaseModel):
+    board: list[list[Any | None]]
+    player: str = "red"
 
 
 async def initGame():
@@ -150,5 +156,35 @@ async def getStateHandler():
             "applyMove(board, move)",
             "checkWin(board, currentPlayer)",
             "evaluateBoard(board)",
+            "getAgentAdibaMove(board, player)",
         ],
     }
+
+
+async def getAgentAdibaMove(payload: AgentAdibaRequest | dict[str, Any]):
+    try:
+        if not isinstance(payload, AgentAdibaRequest):
+            try:
+                payload = AgentAdibaRequest.model_validate(payload)
+            except ValidationError:
+                return {"error": '"board" is required and "player" is optional.'}, 400
+
+        board = payload.board
+        player = payload.player or "red"
+
+        if not board:
+            return {"error": '"board" is required.'}, 400
+
+        if player not in ("blue", "red"):
+            return {"error": '"player" must be "blue" or "red".'}, 400
+
+        result = get_agent_adiba_move(board, player)
+
+        return {
+            "move": result.get("move"),
+            "phase": result.get("phase"),
+            "win_probability": result.get("win_probability"),
+            "explanation": result.get("explanation"),
+        }
+    except Exception as err:
+        return {"error": str(err)}, 500

@@ -1,6 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://dnauxuozanmjdjchvbff.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuYXV4dW96YW5tamRqY2h2YmZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ2MTYsImV4cCI6MjA4NzkzMDYxNn0.m4ChZ8o5u5TSRLq2JJb0ZzzxipPIQyEVWDtBI9jK_OY'; // Replace with your Supabase anon/public key
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+const isValidUrl = (value) => {
+	try {
+		if (!value) return false;
+		const parsed = new URL(value);
+		return parsed.protocol === 'https:' && parsed.hostname.endsWith('.supabase.co');
+	} catch {
+		return false;
+	}
+};
+
+export const isSupabaseConfigured = isValidUrl(supabaseUrl) && !!supabaseKey;
+export const supabaseConfigError = isSupabaseConfigured
+	? null
+	: 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in frontend/.env.local.';
+
+if (!isSupabaseConfigured) {
+	console.error(supabaseConfigError);
+	if (typeof window !== 'undefined' && window.localStorage) {
+		Object.keys(window.localStorage)
+			.filter((key) => key.startsWith('sb-'))
+			.forEach((key) => window.localStorage.removeItem(key));
+	}
+}
+
+export const supabase = createClient(
+	isSupabaseConfigured ? supabaseUrl : 'https://invalid.supabase.co',
+	isSupabaseConfigured ? supabaseKey : 'invalid-key',
+	{
+		auth: {
+			autoRefreshToken: isSupabaseConfigured,
+			persistSession: isSupabaseConfigured,
+			detectSessionInUrl: isSupabaseConfigured,
+		},
+	}
+);

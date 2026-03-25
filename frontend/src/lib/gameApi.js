@@ -91,12 +91,20 @@ export async function sendMove(board, move, currentPlayer, captures, moveCount) 
 }
 
 /**
- * getEngineState()
+ * getAgentAdibaMove(board, player)
  *
- * Fetch engine metadata (health check / capabilities).
+ * Request Agent Adiba's next move from the backend.
+ *
+ * Response:
+ * {
+ *   move: { from, to, isJump, captures },
+ *   phase: "Opening"|"Midgame"|"Endgame",
+ *   win_probability: number,
+ *   explanation: string
+ * }
  */
-export async function getEngineState() {
-  return get('/state');
+export async function getAgentAdibaMove(board, player = "red") {
+  return post('/agent-adiba-move', { board, player });
 }
 
 // ── Board format conversion ───────────────────────────────────────────────

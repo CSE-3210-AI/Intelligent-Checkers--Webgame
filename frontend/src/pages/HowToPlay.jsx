@@ -103,6 +103,7 @@ const guideSteps = [
 export default function HowToPlay() {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
+  const [practiceAgent, setPracticeAgent] = useState('adiba');
 
   const step = useMemo(() => guideSteps[activeStep], [activeStep]);
   const StepIcon = step.icon;
@@ -203,16 +204,40 @@ export default function HowToPlay() {
             </Card>
 
             <Card className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10">
-              <CardContent className="flex flex-col gap-4 p-5 text-sm text-emerald-100 md:flex-row md:items-center md:justify-between">
+              <CardContent className="flex flex-col gap-4 p-5 text-sm text-emerald-100">
                 <div className="flex items-start gap-2">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>
                     Turn resolution, legal moves, captures, and win detection are enforced server-side by the game engine.
                   </p>
                 </div>
-                <Button onClick={() => navigate('/game?autostart=true')} className="bg-emerald-500 text-white hover:bg-emerald-400">
-                  Start Practice Match
-                </Button>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase tracking-wide text-emerald-100/90">Practice Against</span>
+                    <Button
+                      type="button"
+                      variant={practiceAgent === 'adiba' ? 'default' : 'outline'}
+                      onClick={() => setPracticeAgent('adiba')}
+                      className={practiceAgent === 'adiba' ? 'bg-emerald-500 text-white hover:bg-emerald-400' : 'border-emerald-200/60 bg-transparent text-emerald-100 hover:bg-emerald-400/20'}
+                    >
+                      Agent Adiba
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={practiceAgent === 'megha' ? 'default' : 'outline'}
+                      onClick={() => setPracticeAgent('megha')}
+                      className={practiceAgent === 'megha' ? 'bg-emerald-500 text-white hover:bg-emerald-400' : 'border-emerald-200/60 bg-transparent text-emerald-100 hover:bg-emerald-400/20'}
+                    >
+                      Agent Megha
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={() => navigate(practiceAgent === 'megha' ? '/game?mode=agent-megha' : '/game?mode=agent-adiba')}
+                    className="bg-emerald-500 text-white hover:bg-emerald-400"
+                  >
+                    Start Practice Match
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </section>

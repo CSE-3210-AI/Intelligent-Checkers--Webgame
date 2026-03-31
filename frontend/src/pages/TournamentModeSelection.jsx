@@ -108,6 +108,28 @@ export default function TournamentModeSelection() {
           </CardContent>
         </Card>
 
+        {/* Human vs Agent Megha */}
+        <Card
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-blue-300 hover:border-blue-500"
+          onClick={() => navigate('/game?mode=agent-megha')}
+        >
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl">Human vs Agent Megha</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Play against Agent Megha, a strong Alpha-Beta agent with iterative deepening and tactical move ordering.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button variant="secondary" className="text-xs">Alpha-Beta</Button>
+              <Button variant="secondary" className="text-xs">Iterative Deepening</Button>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

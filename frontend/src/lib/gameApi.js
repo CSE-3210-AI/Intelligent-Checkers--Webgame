@@ -108,6 +108,15 @@ export async function getAgentAdibaMove(board, player = "red") {
 }
 
 /**
+ * getAgentMeghaMove(board, player)
+ *
+ * Request Agent Megha's next move from the backend.
+ */
+export async function getAgentMeghaMove(board, player = "red") {
+  return post('/agent-megha-move', { board, player });
+}
+
+/**
  * getExternalAgentMove(board, player)
  *
  * Request the external benchmark agent's next move from the backend.

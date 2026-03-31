@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from controllers.gameController import (
     getAgentAdibaMove,
+    getAgentMeghaMove,
     getExternalAgentMove,
     getStateHandler,
     initGame,
@@ -49,6 +50,15 @@ async def move_route(payload: dict[str, Any] | None = Body(default=None)):
 @router.post("/agent-adiba-move")
 async def agent_adiba_move_route(payload: dict[str, Any] | None = Body(default=None)):
     result = await getAgentAdibaMove(payload)
+    if isinstance(result, tuple):
+        body, status = result
+        return JSONResponse(status_code=status, content=body)
+    return result
+
+
+@router.post("/agent-megha-move")
+async def agent_megha_move_route(payload: dict[str, Any] | None = Body(default=None)):
+    result = await getAgentMeghaMove(payload)
     if isinstance(result, tuple):
         body, status = result
         return JSONResponse(status_code=status, content=body)

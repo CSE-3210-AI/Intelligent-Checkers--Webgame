@@ -19,6 +19,7 @@ import {
   sendMove,
   toDisplayBoard,
   getAgentAdibaMove,
+  getAgentMeghaMove,
   getExternalAgentMove,
 } from '../lib/gameApi';
 import {
@@ -38,6 +39,7 @@ const PLAYER_TYPE_LABEL = {
 const GAME_MODE_LABEL = {
   'human-vs-human': 'Human vs Human',
   'human-vs-adiba': 'Human vs Agent Adiba',
+  'human-vs-megha': 'Human vs Agent Megha',
   'internal-ai-tournament': 'Internal AI Tournament',
   'online-benchmark': 'Online Benchmark Tournament',
 };
@@ -46,6 +48,7 @@ function getModeFromQuery(params) {
   if (params.get('autostart') === 'true') return 'human-vs-human';
   const mode = params.get('mode');
   if (mode === 'agent-adiba') return 'human-vs-adiba';
+  if (mode === 'agent-megha') return 'human-vs-megha';
   if (mode === 'internal-tournament') return 'internal-ai-tournament';
   if (mode === 'online-benchmark') return 'online-benchmark';
   return null;
@@ -59,6 +62,13 @@ function buildPlayersForMode(gameMode, params) {
     return {
       blue: { name: 'Player 1', type: 'human', agentKey: null },
       red: { name: 'Agent Adiba', type: 'adiba', agentKey: 'adiba' },
+    };
+  }
+
+  if (gameMode === 'human-vs-megha') {
+    return {
+      blue: { name: 'Player 1', type: 'human', agentKey: null },
+      red: { name: 'Agent Megha', type: 'internal_ai', agentKey: 'megha' },
     };
   }
 
@@ -357,20 +367,24 @@ const GamePage = () => {
 
     const actor = players[currentPlayer] ?? { name: 'AI Agent', type: 'internal_ai', agentKey: null };
 
-    if (actor.type === 'internal_ai' && actor.agentKey !== 'adiba') {
-      setApiError(`${actor.name} is not implemented yet. Add ${actor.name} backend logic first.`);
-      return;
-    }
-
     setIsFetchingAgentMove(true);
     setApiError(null);
     setSelected(null);
     setHighlights([]);
 
     try {
-      const decision = actor.type === 'external_ai'
-        ? await getExternalAgentMove(engineBoard, currentPlayer)
-        : await getAgentAdibaMove(engineBoard, currentPlayer);
+      let decision;
+
+      if (actor.type === 'external_ai') {
+        decision = await getExternalAgentMove(engineBoard, currentPlayer);
+      } else if (actor.type === 'adiba' || actor.agentKey === 'adiba') {
+        decision = await getAgentAdibaMove(engineBoard, currentPlayer);
+      } else if (actor.agentKey === 'megha') {
+        decision = await getAgentMeghaMove(engineBoard, currentPlayer);
+      } else {
+        setApiError(`${actor.name} is not implemented yet. Add ${actor.name} backend logic first.`);
+        return;
+      }
 
       if (decision?.error) {
         setApiError(`${actor.name} failed to generate move: ${decision.error}`);

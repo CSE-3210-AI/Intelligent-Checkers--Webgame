@@ -514,7 +514,7 @@ const GamePage = () => {
 
       <main className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-6 md:px-6 md:py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <section className="min-w-0 space-y-4 lg:col-span-3">
+          <section className="min-w-0 space-y-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
                 <div className={`rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
@@ -571,11 +571,15 @@ const GamePage = () => {
               </CardContent>
             </Card>
 
-            {mode === 'play' && isCurrentTurnAi && (
+            {mode === 'play' && (
               <Card className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 backdrop-blur-lg">
                 <CardContent className="flex items-center gap-3 p-4 text-sm text-cyan-100">
                   <span className={`h-2.5 w-2.5 rounded-full ${isFetchingAgentMove ? 'animate-pulse bg-cyan-300' : 'bg-cyan-300/70'}`} />
-                  <span>{isFetchingAgentMove ? `${currentPlayerProfile.name} is thinking...` : `${currentPlayerProfile.name} is waiting for command.`}</span>
+                  <span>
+                    {isCurrentTurnAi
+                      ? (isFetchingAgentMove ? `${currentPlayerProfile.name} is thinking...` : `${currentPlayerProfile.name} is waiting for command.`)
+                      : `${currentPlayerProfile.name} is a human turn.`}
+                  </span>
                 </CardContent>
               </Card>
             )}
@@ -591,14 +595,16 @@ const GamePage = () => {
                   New Game
                 </Button>
 
-                {mode === 'play' && isCurrentTurnAi && (
+                {mode === 'play' && (
                   <Button
                     onClick={handleAgentMove}
                     disabled={!isAiTurn || loading || isFetchingAgentMove || !!winner}
                     className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
                   >
                     {isFetchingAgentMove && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isFetchingAgentMove ? 'Thinking...' : currentTurnActionLabel}
+                    {isCurrentTurnAi
+                      ? (isFetchingAgentMove ? 'Thinking...' : currentTurnActionLabel)
+                      : 'Agent Move (Waiting)'}
                   </Button>
                 )}
 
@@ -694,7 +700,7 @@ const GamePage = () => {
             </div>
           </section>
 
-          <section className="min-w-0 space-y-4 lg:col-span-3">
+          <section className="min-w-0 space-y-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="w-full rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-center justify-between">
@@ -766,9 +772,9 @@ const GamePage = () => {
                       </div>
                       <div className="space-y-1.5 text-sm">
                         <p className="text-cyan-100/80">Explanation</p>
-                        <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-slate-100/95">
+                        <div className="h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-slate-100/95">
                           {lastAgentDecision?.explanation ?? `${singleAgentLabel} will explain each move once a decision is made.`}
-                        </p>
+                        </div>
                       </div>
                       {typeof lastAgentDecision?.searched_depth === 'number' && (
                         <p className="text-xs text-slate-300/90">Search depth: {lastAgentDecision.searched_depth}</p>
@@ -796,19 +802,34 @@ const GamePage = () => {
                                 {sideProfile?.agentKey === 'megha' ? 'Alpha-Beta' : 'MCTS + Fuzzy'}
                               </Badge>
                             </div>
-                            <p className={`mt-1 text-sm ${valueClass}`}>
-                              <span className={accentClass}>Move: </span>
-                              {sideDecision?.move_text ?? 'Waiting for move...'}
-                            </p>
-                            <p className={`mt-1 text-sm ${valueClass}`}>
-                              <span className={accentClass}>Explanation: </span>
-                              {sideDecision?.explanation ?? 'No explanation yet.'}
-                            </p>
-                            {typeof sideDecision?.win_probability === 'number' && (
-                              <p className={`mt-1 text-xs ${accentClass}`}>
-                                Win probability: {Math.round(sideDecision.win_probability * 100)}%
-                                {typeof sideDecision?.searched_depth === 'number' ? ` · Depth ${sideDecision.searched_depth}` : ''}
+                            <div className="mt-2 space-y-1.5 text-sm">
+                              <p className={accentClass}>Chosen Move</p>
+                              <p className={`rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium ${valueClass}`}>
+                                {sideDecision?.move_text ?? 'Waiting for move...'}
                               </p>
+                            </div>
+                            <div className="mt-2 space-y-1.5 text-sm">
+                              <div className="flex items-center justify-between">
+                                <p className={accentClass}>Win Probability</p>
+                                <p className={`font-semibold ${valueClass}`}>
+                                  {typeof sideDecision?.win_probability === 'number' ? `${Math.round(sideDecision.win_probability * 100)}%` : '—'}
+                                </p>
+                              </div>
+                              <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${isBlueSide ? 'bg-blue-300' : 'bg-rose-300'}`}
+                                  style={{ width: `${Math.max(0, Math.min(100, Math.round((sideDecision?.win_probability ?? 0) * 100)))}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-2 space-y-1.5 text-sm">
+                              <p className={accentClass}>Explanation</p>
+                              <div className={`h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed ${valueClass}`}>
+                                {sideDecision?.explanation ?? 'No explanation yet.'}
+                              </div>
+                            </div>
+                            {typeof sideDecision?.searched_depth === 'number' && (
+                              <p className={`mt-1 text-xs ${accentClass}`}>Depth: {sideDecision.searched_depth}</p>
                             )}
                           </div>
                         );
@@ -818,29 +839,6 @@ const GamePage = () => {
 
                   {gameMode === 'online-benchmark' && (
                     <div className="space-y-3">
-                      <div className="rounded-lg border border-blue-300/35 bg-blue-500/10 px-3 py-2">
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
-                          <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">
-                            {onlineInternalProfile.name}
-                          </Badge>
-                        </div>
-                        <p className="mt-1 text-sm text-blue-50">
-                          <span className="text-blue-200/90">Move: </span>
-                          {onlineInternalDecision?.move_text ?? 'Waiting for internal agent move...'}
-                        </p>
-                        <p className="mt-1 text-sm text-blue-50">
-                          <span className="text-blue-200/90">Explanation: </span>
-                          {onlineInternalDecision?.explanation ?? `${onlineInternalProfile.name} context will appear after its first move.`}
-                        </p>
-                        {typeof onlineInternalDecision?.win_probability === 'number' && (
-                          <p className="mt-1 text-xs text-blue-200/90">
-                            Win probability: {Math.round(onlineInternalDecision.win_probability * 100)}%
-                            {typeof onlineInternalDecision?.searched_depth === 'number' ? ` · Depth ${onlineInternalDecision.searched_depth}` : ''}
-                          </p>
-                        )}
-                      </div>
-
                       <div className="rounded-lg border border-rose-300/35 bg-rose-500/10 px-3 py-2">
                         <div className="mb-1 flex items-center justify-between gap-2">
                           <p className="text-xs uppercase tracking-wide text-rose-100/90">Online Agent Context</p>
@@ -848,19 +846,49 @@ const GamePage = () => {
                             {onlineExternalProfile.name}
                           </Badge>
                         </div>
-                        <p className="mt-1 text-sm text-rose-50">
-                          <span className="text-rose-200/90">Move: </span>
-                          {onlineExternalDecision?.move_text ?? 'Waiting for online agent move...'}
-                        </p>
-                        <p className="mt-1 text-sm text-rose-50">
-                          <span className="text-rose-200/90">Explanation: </span>
-                          {onlineExternalDecision?.explanation ?? 'No online explanation yet.'}
-                        </p>
-                        {typeof onlineExternalDecision?.win_probability === 'number' && (
-                          <p className="mt-1 text-xs text-rose-200/90">
-                            Win probability: {Math.round(onlineExternalDecision.win_probability * 100)}%
-                            {typeof onlineExternalDecision?.searched_depth === 'number' ? ` · Depth ${onlineExternalDecision.searched_depth}` : ''}
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          <p className="text-rose-200/90">Chosen Move</p>
+                          <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-rose-50">
+                            {onlineExternalDecision?.move_text ?? 'Waiting for online agent move...'}
                           </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-blue-300/35 bg-blue-500/10 px-3 py-2">
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
+                          <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">
+                            {onlineInternalProfile.name}
+                          </Badge>
+                        </div>
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          <p className="text-blue-200/90">Chosen Move</p>
+                          <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-blue-50">
+                            {onlineInternalDecision?.move_text ?? 'Waiting for internal agent move...'}
+                          </p>
+                        </div>
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          <div className="flex items-center justify-between">
+                            <p className="text-blue-200/90">Win Probability</p>
+                            <p className="font-semibold text-blue-50">
+                              {typeof onlineInternalDecision?.win_probability === 'number' ? `${Math.round(onlineInternalDecision.win_probability * 100)}%` : '—'}
+                            </p>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
+                            <div
+                              className="h-full rounded-full bg-blue-300 transition-all duration-500"
+                              style={{ width: `${Math.max(0, Math.min(100, Math.round((onlineInternalDecision?.win_probability ?? 0) * 100)))}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          <p className="text-blue-200/90">Explanation</p>
+                          <div className="h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-blue-50">
+                            {onlineInternalDecision?.explanation ?? `${onlineInternalProfile.name} context will appear after its first move.`}
+                          </div>
+                        </div>
+                        {typeof onlineInternalDecision?.searched_depth === 'number' && (
+                          <p className="mt-1 text-xs text-blue-200/90">Depth: {onlineInternalDecision.searched_depth}</p>
                         )}
                       </div>
                     </div>

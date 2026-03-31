@@ -42,7 +42,7 @@ const Board = ({
   };
 
   return (
-    <div className="w-full bg-black/80 p-2 rounded-2xl shadow-2xl">
+    <div className="mx-auto w-full max-w-[520px] bg-black/80 p-2 rounded-2xl shadow-2xl">
       <div className="grid grid-cols-8 gap-0 w-full aspect-square rounded-2xl overflow-hidden">
         {Array.from({ length: 8 }, (_, row) =>
           Array.from({ length: 8 }, (_, col) => renderSquare(row, col))

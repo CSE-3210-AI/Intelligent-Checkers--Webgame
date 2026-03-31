@@ -6,126 +6,126 @@ import { Users, Bot, ArrowLeft, Swords, Brain } from 'lucide-react';
 export default function TournamentModeSelection() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.25),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.18),transparent_40%),linear-gradient(180deg,#020617_0%,#081533_60%,#071225_100%)] px-4 py-12 relative text-slate-100">
       <button
         type="button"
         aria-label="Go back"
-        className="absolute left-8 top-8 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm z-10"
+        className="absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-blue-100 via-cyan-200 to-blue-100 bg-clip-text text-transparent">
         Tournament Mode Selection
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl mb-12">
 
         {/* Human vs Human */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-emerald-300 hover:border-emerald-500"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-emerald-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-emerald-300/65"
           onClick={() => navigate('/game?autostart=true')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
               <Swords className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Human vs Human</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-2xl text-slate-100">Human vs Human</CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-300">
               Play a live match against another person on the same device. Full rules, undo, resign, and win detection included.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs">Local Multiplayer</Button>
-              <Button variant="secondary" className="text-xs">Full Rules</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Local Multiplayer</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Full Rules</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Internal AI Tournament */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-blue-200 hover:border-blue-400"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-blue-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-blue-300/65"
           onClick={() => navigate('/tournament/internal')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
               <Users className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Internal AI Tournament</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-2xl text-slate-100">Internal AI Tournament</CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-300">
               Benchmark our in-house AI agents against each other for algorithmic comparison and research evaluation.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs">Algorithm Comparison</Button>
-              <Button variant="secondary" className="text-xs">Research Evaluation</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Algorithm Comparison</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Research Evaluation</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Online Benchmark Tournament */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-slate-400 hover:border-slate-600"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-slate-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-slate-300/65"
           onClick={() => navigate('/tournament/online')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-lg">
               <Bot className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Online Benchmark Tournament</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-2xl text-slate-100">Online Benchmark Tournament</CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-300">
               Compete with a selected internal AI agent against an external AI from public repositories for cross-system benchmarking.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs">External AI</Button>
-              <Button variant="secondary" className="text-xs">Cross-Benchmark</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">External AI</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Cross-Benchmark</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Human vs Agent Adiba */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-purple-300 hover:border-purple-500"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-cyan-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-cyan-300/65"
           onClick={() => navigate('/game?mode=agent-adiba')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
               <Brain className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Human vs Agent Adiba</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-2xl text-slate-100">Human vs Agent Adiba</CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-300">
               Play against Agent Adiba, our adaptive AI powered by Monte Carlo Tree Search and Fuzzy Logic. The AI will explain its strategy and reasoning.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs">MCTS + Fuzzy</Button>
-              <Button variant="secondary" className="text-xs">Explainable AI</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">MCTS + Fuzzy</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Explainable AI</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Human vs Agent Megha */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-blue-300 hover:border-blue-500"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-blue-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-blue-300/65"
           onClick={() => navigate('/game?mode=agent-megha')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
               <Bot className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Human vs Agent Megha</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-2xl text-slate-100">Human vs Agent Megha</CardTitle>
+            <CardDescription className="text-base mt-2 text-slate-300">
               Play against Agent Megha, a strong Alpha-Beta agent with iterative deepening and tactical move ordering.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs">Alpha-Beta</Button>
-              <Button variant="secondary" className="text-xs">Iterative Deepening</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Alpha-Beta</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Iterative Deepening</Button>
             </div>
           </CardContent>
         </Card>

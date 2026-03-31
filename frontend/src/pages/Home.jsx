@@ -1,14 +1,12 @@
-import React, { useState, useRef, useState as useReactState } from 'react';
+import React, { useRef, useState as useReactState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Users, Bot, Trophy, Gamepad2, ArrowRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
+import { Trophy, Gamepad2, ChevronDown, LogOut } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 
 const Home = () => {
-  const [selectedMode, setSelectedMode] = useState('ai1-ai2');
   const navigate = useNavigate();
   const { user, logout } = useUser();
   const [dropdown, setDropdown] = useReactState(false);
@@ -36,18 +34,10 @@ const Home = () => {
               <Gamepad2 className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-black">
-              StellarCheckers
+              CheckersAI
             </span>
           </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <button className="px-4 py-2 rounded-md transition-colors text-black font-medium bg-transparent hover:bg-[#e6f0fa] focus:bg-[#e6f0fa]" onClick={() => navigate('#how-to-play')}>
-              How to Play
-            </button>
-            <button className="px-4 py-2 rounded-md transition-colors text-black font-medium bg-transparent hover:bg-[#e6f0fa] focus:bg-[#e6f0fa] flex items-center" onClick={() => navigate('/tournaments')}>
-              <Trophy className="w-4 h-4 mr-2" />
-              Tournaments
-            </button>
-          </nav>
+          <nav className="hidden md:flex items-center gap-6" />
           <div className="flex items-center gap-3">
             <button className="px-4 py-2 rounded-md transition-colors text-black font-medium bg-transparent hover:bg-[#e6f0fa] focus:bg-[#e6f0fa]">
               Rankings
@@ -98,7 +88,7 @@ const Home = () => {
             </Badge>
 
             <h1 className="text-6xl font-extrabold bg-linear-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent mb-6">
-              Select Game Mode
+              Welcome to CheckersAI
             </h1>
             
             <p className="text-slate-600 text-lg max-w-2xl mx-auto leading-relaxed">
@@ -110,28 +100,20 @@ const Home = () => {
           {/* Tournament mode selection is now under the Tournaments section. */}
 
           {/* Action Section */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 max-w-4xl mx-auto">
-            <Card className="flex-1 max-w-sm bg-linear-to-br from-white to-slate-50">
-              <CardContent className="pt-6">
-                <p className="text-sm text-slate-500 uppercase tracking-wide mb-2 text-center">Selected Mode</p>
-                <p className="text-xl font-bold text-slate-900 text-center">
-                  {selectedMode === 'ai1-ai2' ? 'AI1 vs AI2' : 'Our AI vs Online AI'}
-                </p>
-              </CardContent>
-            </Card>
-            <Button 
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 max-w-4xl mx-auto">
+            <Button
               size="lg"
-              className="bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all"
-              onClick={() => {
-                if (selectedMode === 'our-vs-online') {
-                  navigate('/select-internal-agent');
-                } else {
-                  navigate('/meet-agents');
-                }
-              }}
+              className="h-16 min-w-[230px] rounded-2xl border-2 border-cyan-300/70 bg-linear-to-r from-cyan-100 to-blue-100 text-slate-900 hover:from-cyan-200 hover:to-blue-200 font-extrabold text-lg px-10 shadow-[0_12px_30px_rgba(59,130,246,0.25)] transition-all"
+              onClick={() => navigate('/how-to-play')}
             >
-              Continue to Benchmark
-              <ArrowRight className="ml-2 w-5 h-5" />
+              📘 How to Play
+            </Button>
+            <Button
+              size="lg"
+              className="h-16 min-w-[230px] rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-800 text-white font-extrabold text-lg px-10 shadow-[0_16px_36px_rgba(37,99,235,0.45)] transition-all"
+              onClick={() => navigate('/tournaments')}
+            >
+              🏆 Tournaments
             </Button>
           </div>
         </div>

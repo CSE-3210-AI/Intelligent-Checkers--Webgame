@@ -144,6 +144,7 @@ const GamePage = () => {
   const [apiError, setApiError] = useState(null);
   const [isFetchingAgentMove, setIsFetchingAgentMove] = useState(false);
   const [lastAgentDecision, setLastAgentDecision] = useState(null);
+  const [agentDecisionsByColor, setAgentDecisionsByColor] = useState({ blue: null, red: null });
 
   const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed,   setElapsed]   = useState(0);
@@ -174,13 +175,7 @@ const GamePage = () => {
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
 
-  const currentTurnActionLabel = currentPlayerType === 'adiba'
-    ? 'Adiba Turn'
-    : currentPlayerType === 'external_ai'
-      ? 'Online Agent Turn'
-      : currentPlayerType === 'internal_ai'
-        ? 'Internal AI Turn'
-        : 'Player Turn';
+  const currentTurnActionLabel = isCurrentTurnHuman ? 'Player Turn' : `${currentPlayerProfile.name} Turn`;
 
   const currentPhase = useMemo(() => {
     if (!displayBoard) return 'Opening';
@@ -226,6 +221,7 @@ const GamePage = () => {
       setShowLastMove(false);
       setIsFetchingAgentMove(false);
       setLastAgentDecision(null);
+      setAgentDecisionsByColor({ blue: null, red: null });
       setMode('play');
       setStartTime(Date.now());
       setElapsed(0);
@@ -387,29 +383,35 @@ const GamePage = () => {
       }
 
       if (decision?.error) {
-        setApiError(`${actor.name} failed to generate move: ${decision.error}`);
-        setLastAgentDecision({
+        const failedDecision = {
           move: null,
           move_text: 'No move generated',
           win_probability: 0,
           explanation: decision.error,
           type: actor.type,
           name: actor.name,
-        });
+          agentKey: actor.agentKey,
+        };
+        setApiError(`${actor.name} failed to generate move: ${decision.error}`);
+        setLastAgentDecision(failedDecision);
+        setAgentDecisionsByColor(prev => ({ ...prev, [currentPlayer]: failedDecision }));
         return;
       }
 
       if (!decision?.move) {
-        setApiError(`${actor.name} failed to generate move`);
-        setWinner(opposite(currentPlayer));
-        setLastAgentDecision({
+        const failedDecision = {
           move: null,
           move_text: 'No move generated',
           win_probability: 0,
           explanation: 'AI failed to generate move',
           type: actor.type,
           name: actor.name,
-        });
+          agentKey: actor.agentKey,
+        };
+        setApiError(`${actor.name} failed to generate move`);
+        setWinner(opposite(currentPlayer));
+        setLastAgentDecision(failedDecision);
+        setAgentDecisionsByColor(prev => ({ ...prev, [currentPlayer]: failedDecision }));
         setLegalMoves([]);
         setMoveableSet(new Set());
         setDestinationMap({});
@@ -427,12 +429,15 @@ const GamePage = () => {
       setWinner(result.winner);
       setLastMove({ from: decision.move.from, to: decision.move.to[0] });
       setShowLastMove(true);
-      setLastAgentDecision({
+      const enrichedDecision = {
         ...decision,
         type: actor.type,
         name: actor.name,
+        agentKey: actor.agentKey,
         move_text: decision.move_text ?? formatMoveText(decision.move),
-      });
+      };
+      setLastAgentDecision(enrichedDecision);
+      setAgentDecisionsByColor(prev => ({ ...prev, [currentPlayer]: enrichedDecision }));
 
       if (!result.winner) {
         const nextType = players[result.currentPlayer]?.type ?? 'human';
@@ -472,7 +477,13 @@ const GamePage = () => {
   const redPlayer = players.red ?? { name: 'Player 2', type: 'human' };
 
   const strategyKind = mode !== 'play' ? 'demo' : currentPlayerType;
+  const isSingleAgentMode = gameMode === 'human-vs-adiba' || gameMode === 'human-vs-megha';
+  const singleAgentLabel = gameMode === 'human-vs-megha' ? 'Agent Megha' : 'Agent Adiba';
   const winnerProfile = winner ? players[winner] : null;
+  const onlineInternalProfile = players.blue ?? { name: 'Internal Agent', agentKey: 'adiba' };
+  const onlineExternalProfile = players.red ?? { name: 'Online Agent', agentKey: 'external' };
+  const onlineInternalDecision = agentDecisionsByColor.blue;
+  const onlineExternalDecision = agentDecisionsByColor.red;
 
   // Responsive container and layout
   return (
@@ -703,7 +714,11 @@ const GamePage = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">AI Tactical Mode</span>
                     <Badge className="bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/15">
-                      {currentPlayerType === 'adiba' ? currentStrategyLabel : 'Black-box Mode'}
+                      {currentPlayerType === 'adiba'
+                        ? currentStrategyLabel
+                        : currentPlayerProfile?.agentKey === 'megha'
+                          ? `Alpha-Beta (${currentPhase})`
+                          : 'Black-box Mode'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
@@ -727,12 +742,12 @@ const GamePage = () => {
                 <CardContent className="space-y-4 p-4">
                   <h3 className="text-lg font-semibold text-cyan-100">Strategy Panel</h3>
 
-                  {strategyKind === 'adiba' && (
+                  {isSingleAgentMode && (
                     <>
                       <div className="space-y-1.5 text-sm">
                         <p className="text-cyan-100/80">Chosen Move</p>
                         <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-slate-100">
-                          {lastAgentDecision?.move_text ?? 'Waiting for Adiba turn...'}
+                          {lastAgentDecision?.move_text ?? `Waiting for ${singleAgentLabel} turn...`}
                         </p>
                       </div>
                       <div className="space-y-2 text-sm">
@@ -752,13 +767,106 @@ const GamePage = () => {
                       <div className="space-y-1.5 text-sm">
                         <p className="text-cyan-100/80">Explanation</p>
                         <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-slate-100/95">
-                          {lastAgentDecision?.explanation ?? 'Agent Adiba will explain each move once a decision is made.'}
+                          {lastAgentDecision?.explanation ?? `${singleAgentLabel} will explain each move once a decision is made.`}
                         </p>
                       </div>
+                      {typeof lastAgentDecision?.searched_depth === 'number' && (
+                        <p className="text-xs text-slate-300/90">Search depth: {lastAgentDecision.searched_depth}</p>
+                      )}
                     </>
                   )}
 
-                  {(strategyKind === 'internal_ai' || strategyKind === 'external_ai') && (
+                  {gameMode === 'internal-ai-tournament' && (
+                    <div className="space-y-3">
+                      {['blue', 'red'].map((side) => {
+                        const sideDecision = agentDecisionsByColor[side];
+                        const sideProfile = players[side] ?? { name: side === 'blue' ? 'Blue Agent' : 'Red Agent' };
+                        const isBlueSide = side === 'blue';
+                        const containerClass = isBlueSide
+                          ? 'border-blue-300/35 bg-blue-500/10'
+                          : 'border-rose-300/35 bg-rose-500/10';
+                        const labelClass = isBlueSide ? 'text-blue-100/90' : 'text-rose-100/90';
+                        const valueClass = isBlueSide ? 'text-blue-50' : 'text-rose-50';
+                        const accentClass = isBlueSide ? 'text-blue-200/90' : 'text-rose-200/90';
+                        return (
+                          <div key={side} className={`rounded-lg border px-3 py-2 ${containerClass}`}>
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <p className={`text-xs uppercase tracking-wide ${labelClass}`}>{sideProfile.name} ({side})</p>
+                              <Badge className={isBlueSide ? 'bg-blue-500/20 text-blue-100 hover:bg-blue-500/20' : 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/20'}>
+                                {sideProfile?.agentKey === 'megha' ? 'Alpha-Beta' : 'MCTS + Fuzzy'}
+                              </Badge>
+                            </div>
+                            <p className={`mt-1 text-sm ${valueClass}`}>
+                              <span className={accentClass}>Move: </span>
+                              {sideDecision?.move_text ?? 'Waiting for move...'}
+                            </p>
+                            <p className={`mt-1 text-sm ${valueClass}`}>
+                              <span className={accentClass}>Explanation: </span>
+                              {sideDecision?.explanation ?? 'No explanation yet.'}
+                            </p>
+                            {typeof sideDecision?.win_probability === 'number' && (
+                              <p className={`mt-1 text-xs ${accentClass}`}>
+                                Win probability: {Math.round(sideDecision.win_probability * 100)}%
+                                {typeof sideDecision?.searched_depth === 'number' ? ` · Depth ${sideDecision.searched_depth}` : ''}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {gameMode === 'online-benchmark' && (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-blue-300/35 bg-blue-500/10 px-3 py-2">
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
+                          <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">
+                            {onlineInternalProfile.name}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-sm text-blue-50">
+                          <span className="text-blue-200/90">Move: </span>
+                          {onlineInternalDecision?.move_text ?? 'Waiting for internal agent move...'}
+                        </p>
+                        <p className="mt-1 text-sm text-blue-50">
+                          <span className="text-blue-200/90">Explanation: </span>
+                          {onlineInternalDecision?.explanation ?? `${onlineInternalProfile.name} context will appear after its first move.`}
+                        </p>
+                        {typeof onlineInternalDecision?.win_probability === 'number' && (
+                          <p className="mt-1 text-xs text-blue-200/90">
+                            Win probability: {Math.round(onlineInternalDecision.win_probability * 100)}%
+                            {typeof onlineInternalDecision?.searched_depth === 'number' ? ` · Depth ${onlineInternalDecision.searched_depth}` : ''}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="rounded-lg border border-rose-300/35 bg-rose-500/10 px-3 py-2">
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <p className="text-xs uppercase tracking-wide text-rose-100/90">Online Agent Context</p>
+                          <Badge className="bg-rose-500/20 text-rose-100 hover:bg-rose-500/20">
+                            {onlineExternalProfile.name}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-sm text-rose-50">
+                          <span className="text-rose-200/90">Move: </span>
+                          {onlineExternalDecision?.move_text ?? 'Waiting for online agent move...'}
+                        </p>
+                        <p className="mt-1 text-sm text-rose-50">
+                          <span className="text-rose-200/90">Explanation: </span>
+                          {onlineExternalDecision?.explanation ?? 'No online explanation yet.'}
+                        </p>
+                        {typeof onlineExternalDecision?.win_probability === 'number' && (
+                          <p className="mt-1 text-xs text-rose-200/90">
+                            Win probability: {Math.round(onlineExternalDecision.win_probability * 100)}%
+                            {typeof onlineExternalDecision?.searched_depth === 'number' ? ` · Depth ${onlineExternalDecision.searched_depth}` : ''}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {gameMode !== 'internal-ai-tournament' && gameMode !== 'online-benchmark' && !isSingleAgentMode && (strategyKind === 'internal_ai' || strategyKind === 'external_ai') && (
                     <>
                       <div className="space-y-1.5 text-sm">
                         <p className="text-cyan-100/80">Chosen Move</p>
@@ -766,15 +874,37 @@ const GamePage = () => {
                           {lastAgentDecision?.move_text ?? `Waiting for ${currentPlayerProfile.name} turn...`}
                         </p>
                       </div>
-                      <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 text-sm text-slate-200/95">
-                        AI agent move - no internal explanation available
-                      </p>
+
+                      {typeof lastAgentDecision?.win_probability === 'number' && (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <p className="text-cyan-100/80">Win Probability</p>
+                            <p className="font-semibold text-cyan-100">{Math.round(lastAgentDecision.win_probability * 100)}%</p>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
+                            <div
+                              className="h-full rounded-full bg-cyan-300 transition-all duration-500"
+                              style={{ width: `${Math.max(0, Math.min(100, Math.round((lastAgentDecision.win_probability ?? 0) * 100)))}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5 text-sm">
+                        <p className="text-cyan-100/80">Explanation</p>
+                        <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 text-sm text-slate-200/95">
+                          {lastAgentDecision?.explanation ?? 'Waiting for AI analysis...'}
+                          {typeof lastAgentDecision?.searched_depth === 'number' ? ` (Depth: ${lastAgentDecision.searched_depth})` : ''}
+                        </p>
+                      </div>
                     </>
                   )}
 
-                  {strategyKind === 'human' && (
+                  {!isSingleAgentMode && strategyKind === 'human' && (
                     <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 text-sm text-slate-100/95">
-                      Waiting for player move
+                      {(gameMode === 'human-vs-adiba' || gameMode === 'human-vs-megha') && lastAgentDecision
+                        ? `${lastAgentDecision.name}: ${lastAgentDecision.explanation ?? 'No explanation available.'}${typeof lastAgentDecision?.searched_depth === 'number' ? ` (Depth: ${lastAgentDecision.searched_depth})` : ''}`
+                        : 'Waiting for player move'}
                     </p>
                   )}
 

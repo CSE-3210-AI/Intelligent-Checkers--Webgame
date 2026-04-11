@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Bot, CircleHelp, Loader2, Settings, Users } from 'lucide-react';
 
 import Board from '../components/Board';
@@ -147,6 +148,8 @@ const GamePage = () => {
   const [apiError, setApiError] = useState(null);
   const [isFetchingAgentMove, setIsFetchingAgentMove] = useState(false);
   const [lastAgentDecision, setLastAgentDecision] = useState(null);
+  const [agentDecisionsByColor, setAgentDecisionsByColor] = useState({ blue: null, red: null });
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
 
   // MVP animation state (single-step only).
   const [isMoveAnimating, setIsMoveAnimating] = useState(false);
@@ -157,6 +160,7 @@ const GamePage = () => {
   const animationIdRef = useRef(0);
   const pendingCommitRef = useRef(null);
   const animationWatchdogRef = useRef(null);
+  const autoPlayedTurnRef = useRef(null);
 
   const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed,   setElapsed]   = useState(0);
@@ -187,6 +191,9 @@ const GamePage = () => {
 
   const currentPlayerProfile = players[currentPlayer] ?? { name: 'Player', type: 'human' };
   const currentPlayerType = currentPlayerProfile.type;
+  const hasAiPlayersInMatch =
+    (players.blue?.type ?? 'human') !== 'human' ||
+    (players.red?.type ?? 'human') !== 'human';
   const isCurrentTurnHuman = currentPlayerType === 'human';
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
@@ -241,6 +248,15 @@ const GamePage = () => {
         name: actor?.name,
         move_text: agentDecision.move_text ?? formatMoveText(agentDecision.move),
       });
+      setAgentDecisionsByColor(prev => ({
+        ...prev,
+        [snapshot.currentPlayer]: {
+          ...agentDecision,
+          type: actor?.type,
+          name: actor?.name,
+          move_text: agentDecision.move_text ?? formatMoveText(agentDecision.move),
+        },
+      }));
     }
 
     if (!result.winner) {
@@ -380,6 +396,7 @@ const GamePage = () => {
     if (isMoveAnimating) return;
     setLoading(true);
     setApiError(null);
+    autoPlayedTurnRef.current = null;
 
     if (animationWatchdogRef.current) {
       clearTimeout(animationWatchdogRef.current);
@@ -430,8 +447,12 @@ const GamePage = () => {
     const mappedMode = getModeFromQuery(searchParams);
     if (mappedMode) {
       const mappedPlayers = buildPlayersForMode(mappedMode, searchParams);
+      const mappedHasAi =
+        (mappedPlayers.blue?.type ?? 'human') !== 'human' ||
+        (mappedPlayers.red?.type ?? 'human') !== 'human';
       setGameMode(mappedMode);
       setPlayers(mappedPlayers);
+      setAutoPlayEnabled(mappedHasAi);
       handleNewGame(mappedPlayers);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -520,7 +541,7 @@ const GamePage = () => {
     setHighlights([]);
   };
 
-  const handleAgentMove = async () => {
+  const handleAgentMove = useCallback(async () => {
     if (!isAiTurn || !engineBoard || interactionLocked) return;
 
     const actor = players[currentPlayer] ?? { name: 'AI Agent', type: 'internal_ai', agentKey: null };
@@ -593,7 +614,27 @@ const GamePage = () => {
       setApiError(`${actor.name} failed to move: ${err.message}`);
       setIsFetchingAgentMove(false);
     }
-  };
+  }, [captures, currentPlayer, engineBoard, interactionLocked, isAiTurn, moveCount, players, queueMoveAnimation]);
+
+  useEffect(() => {
+    if (!autoPlayEnabled) {
+      autoPlayedTurnRef.current = null;
+    }
+  }, [autoPlayEnabled]);
+
+  useEffect(() => {
+    if (!autoPlayEnabled || !hasAiPlayersInMatch || !isAiTurn || !engineBoard || interactionLocked) return;
+
+    const turnKey = `${currentPlayer}:${moveCount}`;
+    if (autoPlayedTurnRef.current === turnKey) return;
+
+    autoPlayedTurnRef.current = turnKey;
+    const timeoutId = setTimeout(() => {
+      void handleAgentMove();
+    }, 260);
+
+    return () => clearTimeout(timeoutId);
+  }, [autoPlayEnabled, currentPlayer, engineBoard, handleAgentMove, hasAiPlayersInMatch, interactionLocked, isAiTurn, moveCount]);
 
   const demoBoards = {
     initial: <InitialBoard />,
@@ -712,7 +753,11 @@ const GamePage = () => {
                   <span className={`h-2.5 w-2.5 rounded-full ${isFetchingAgentMove ? 'animate-pulse bg-cyan-300' : 'bg-cyan-300/70'}`} />
                   <span>
                     {isCurrentTurnAi
-                      ? (isFetchingAgentMove ? `${currentPlayerProfile.name} is thinking...` : `${currentPlayerProfile.name} is waiting for command.`)
+                      ? (isFetchingAgentMove
+                        ? `${currentPlayerProfile.name} is thinking...`
+                        : autoPlayEnabled
+                          ? `${currentPlayerProfile.name} will move automatically.`
+                          : `${currentPlayerProfile.name} is waiting for command.`)
                       : `${currentPlayerProfile.name} is a human turn.`}
                   </span>
                 </CardContent>
@@ -730,14 +775,30 @@ const GamePage = () => {
                   New Game
                 </Button>
 
-                {mode === 'play' && (
+                {mode === 'play' && hasAiPlayersInMatch && (
+                  <div className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Auto Play</p>
+                      <p className="text-[11px] text-slate-400">{autoPlayEnabled ? 'ON: AI turns run automatically' : 'OFF: click Agent Move manually'}</p>
+                    </div>
+                    <Switch
+                      checked={autoPlayEnabled}
+                      onCheckedChange={setAutoPlayEnabled}
+                      aria-label="Toggle auto play for AI turns"
+                    />
+                  </div>
+                )}
+
+                {mode === 'play' && hasAiPlayersInMatch && (
                   <Button
                     onClick={handleAgentMove}
-                    disabled={!isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || !!winner}
+                    disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || !!winner}
                     className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
                   >
-                    {isFetchingAgentMove && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isCurrentTurnAi
+                    {isFetchingAgentMove && !autoPlayEnabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {autoPlayEnabled
+                      ? 'Auto Play Enabled'
+                      : isCurrentTurnAi
                       ? (isFetchingAgentMove ? 'Thinking...' : currentTurnActionLabel)
                       : 'Agent Move (Waiting)'}
                   </Button>
@@ -1093,7 +1154,9 @@ const GamePage = () => {
               ? 'Demo mode is active. Pick a board snapshot or press Play Game to start a match.'
               : isCurrentTurnHuman
                 ? 'Click a piece, then click a highlighted square. Captures are mandatory and multi-jumps complete in one turn.'
-                : `Press ${currentTurnActionLabel} to execute the current AI move.`}
+                : autoPlayEnabled
+                  ? `${currentPlayerProfile.name} will move automatically while Auto Play is ON.`
+                  : `Press ${currentTurnActionLabel} to execute the current AI move.`}
           </CardContent>
         </Card>
       </main>

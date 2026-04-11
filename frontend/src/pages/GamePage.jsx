@@ -120,6 +120,20 @@ function countEngineBoard(board) {
   return { blue, red };
 }
 
+function cloneBoard(board) {
+  if (!Array.isArray(board)) return board;
+  return board.map(row => (Array.isArray(row) ? [...row] : row));
+}
+
+function createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures }) {
+  return {
+    engineBoard: cloneBoard(engineBoard),
+    currentPlayer,
+    moveCount,
+    captures: { ...captures },
+  };
+}
+
 function getPreCaptureCandidates(moves = []) {
   const uniqueSources = new Set();
   const sources = [];
@@ -164,6 +178,7 @@ const GamePage = () => {
   const [highlights, setHighlights] = useState([]);
   const [lastMove, setLastMove] = useState(null); // {from: [r,c], to: [r,c]}
   const [showLastMove, setShowLastMove] = useState(false);
+  const [showPreviousBoard, setShowPreviousBoard] = useState(false);
   const [showResignModal, setShowResignModal] = useState(false);
 
   const [loading,  setLoading]  = useState(false);
@@ -207,9 +222,16 @@ const GamePage = () => {
 
   const timerText = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
 
+  const boardToRender =
+    showPreviousBoard && history.length > 0
+      ? history[history.length - 1].engineBoard
+      : engineBoard;
+
+  const isShowingPreviousBoard = showPreviousBoard && history.length > 0;
+
   const displayBoard = useMemo(
-    () => (engineBoard ? toDisplayBoard(engineBoard) : null),
-    [engineBoard]
+    () => (boardToRender ? toDisplayBoard(boardToRender) : null),
+    [boardToRender]
   );
 
   const pieceCounts = useMemo(
@@ -226,7 +248,12 @@ const GamePage = () => {
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
   const interactionLocked =
-    loading || isFetchingAgentMove || isPreCaptureAnimating || isMoveAnimating || isCaptureAnimating;
+    loading ||
+    isFetchingAgentMove ||
+    isPreCaptureAnimating ||
+    isMoveAnimating ||
+    isCaptureAnimating ||
+    isShowingPreviousBoard;
 
   const currentTurnActionLabel = isCurrentTurnHuman ? 'Player Turn' : `${currentPlayerProfile.name} Turn`;
 
@@ -650,6 +677,7 @@ const GamePage = () => {
       setHighlights([]);
       setLastMove(null);
       setShowLastMove(false);
+      setShowPreviousBoard(false);
       setIsFetchingAgentMove(false);
       setLastAgentDecision(null);
       setAgentDecisionsByColor({ blue: null, red: null });
@@ -692,6 +720,10 @@ const GamePage = () => {
     if (history.length === 0 || loading || isMoveAnimating || isPreCaptureAnimating) return;
     setLoading(true);
     setApiError(null);
+    const willBeEmptyHistory = history.length - 1 <= 0;
+    if (willBeEmptyHistory) {
+      setShowPreviousBoard(false);
+    }
     const snap = history[history.length - 1];
     try {
       setHistory(prev => prev.slice(0, -1));
@@ -733,6 +765,12 @@ const GamePage = () => {
     setHighlights([]);
   };
 
+  const handleTogglePreviousBoard = () => {
+    if (history.length === 0) return;
+    if (isMoveAnimating || isCaptureAnimating || isPreCaptureAnimating) return;
+    setShowPreviousBoard(prev => !prev);
+  };
+
   const handleSquareClick = async (row, col) => {
     if (interactionLocked || winner || mode !== 'play' || isAiTurn) return;
 
@@ -748,7 +786,7 @@ const GamePage = () => {
       if (move) {
         setLoading(true);
         setApiError(null);
-        const snapshot = { engineBoard, currentPlayer, moveCount, captures };
+        const snapshot = createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures });
         try {
           const result = await sendMove(engineBoard, move, currentPlayer, captures, moveCount);
           queueMoveAnimation({ move, result, snapshot });
@@ -833,7 +871,7 @@ const GamePage = () => {
         return;
       }
 
-      const snapshot = { engineBoard, currentPlayer, moveCount, captures };
+      const snapshot = createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures });
       const result = await sendMove(engineBoard, decision.move, currentPlayer, captures, moveCount);
 
       queueMoveAnimation({
@@ -878,9 +916,9 @@ const GamePage = () => {
 
   // Compute last move highlights
   const lastMoveHighlights = useMemo(() => {
-    if (!showLastMove || !lastMove) return [];
+    if (isShowingPreviousBoard || !showLastMove || !lastMove) return [];
     return [lastMove.from, lastMove.to];
-  }, [showLastMove, lastMove]);
+  }, [isShowingPreviousBoard, showLastMove, lastMove]);
 
   const hiddenCaptureSquares = useMemo(() => {
     if (!isCaptureAnimating || !captureAnimationPayload?.pieces?.length) return [];
@@ -1044,17 +1082,12 @@ const GamePage = () => {
 
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    onClick={() => {
-                      if (history.length > 0) {
-                        setShowLastMove(true);
-                        setTimeout(() => setShowLastMove(false), 2500);
-                      }
-                    }}
+                    onClick={handleTogglePreviousBoard}
                     variant="outline"
                     className="h-11 rounded-xl border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
-                    disabled={!lastMove || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating}
+                    disabled={history.length === 0 || isFetchingAgentMove || isMoveAnimating || isCaptureAnimating || isPreCaptureAnimating}
                   >
-                    Last Move
+                    {isShowingPreviousBoard ? 'Current Board' : 'Last Move'}
                   </Button>
                   <Button
                     onClick={() => setShowResignModal(true)}
@@ -1101,6 +1134,12 @@ const GamePage = () => {
             {apiError && (
               <Card className="w-full rounded-2xl border border-red-300/40 bg-red-500/15 backdrop-blur-xl">
                 <CardContent className="p-4 text-sm text-red-100">{apiError}</CardContent>
+              </Card>
+            )}
+
+            {mode === 'play' && isShowingPreviousBoard && (
+              <Card className="w-full rounded-2xl border border-amber-300/40 bg-amber-500/10 backdrop-blur-xl">
+                <CardContent className="p-3 text-sm font-medium text-amber-100">Viewing Previous Move</CardContent>
               </Card>
             )}
 

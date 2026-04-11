@@ -1,4 +1,5 @@
 import Piece from './Piece';
+import PreCaptureHintAura from './PreCaptureHintAura';
 
 /**
  * Square – a single cell on the checkers board.
@@ -9,10 +10,18 @@ import Piece from './Piece';
  * piece         object|null – { color, isKing } or null
  * isHighlighted bool    – legal move destination for the selected piece
  * isSelected    bool    – this square's piece is currently selected
- * isMoveable    bool    – this piece can make a legal move this turn
  * onClick       fn|undefined – click handler from Board
  */
-const Square = ({ isDark, piece, suppressPiece = false, isHighlighted, isSelected, isMoveable, isLastMove, onClick }) => {
+const Square = ({
+  isDark,
+  piece,
+  suppressPiece = false,
+  isHighlighted,
+  isSelected,
+  isLastMove,
+  isPreCaptureCandidate = false,
+  onClick,
+}) => {
   const bgColor = isDark ? 'bg-gradient-to-br from-[#b08d57] to-[#7c5c2e]' : 'bg-[#F0E6D2]';
   const visiblePiece = suppressPiece ? null : piece;
 
@@ -46,11 +55,8 @@ const Square = ({ isDark, piece, suppressPiece = false, isHighlighted, isSelecte
         <div className="absolute inset-0 ring-2 ring-inset ring-yellow-400 pointer-events-none z-20 rounded-lg" />
       )}
 
-      {/* Moveable ring – amber ring around pieces that can legally move this turn */}
-      {isMoveable && !isSelected && !!visiblePiece && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="w-[80%] h-[80%] rounded-full border-[3px] border-yellow-400/80" />
-        </div>
+      {isPreCaptureCandidate && !!visiblePiece && (
+        <PreCaptureHintAura color={visiblePiece.color} />
       )}
 
       {visiblePiece && <Piece color={visiblePiece.color} isKing={visiblePiece.isKing} />}

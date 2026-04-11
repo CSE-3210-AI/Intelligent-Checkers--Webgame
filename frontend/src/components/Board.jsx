@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import Square from './Square';
+import PreCaptureOverlay from './PreCaptureOverlay';
 import MovingPieceOverlay from './MovingPieceOverlay';
 import CapturedPiecesOverlay from './CapturedPiecesOverlay';
 
@@ -22,8 +23,11 @@ const Board = ({
   lastMoveHighlights = [],
   hiddenPieceAt = null,
   hiddenCaptureSquares = [],
+  preCaptureCandidates = [],
+  preCaptureAnimationPayload = null,
   animationPayload = null,
   captureAnimationPayload = null,
+  onPreCaptureAnimationComplete,
   onAnimationComplete,
   onCaptureAnimationComplete,
   disableInteraction = false,
@@ -45,6 +49,7 @@ const Board = ({
     const isSelected = selected !== null && selected[0] === row && selected[1] === col;
     const isMoveable = moveable.has(`${row},${col}`);
     const isLastMove = lastMoveHighlights.some(([r, c]) => r === row && c === col);
+    const isPreCaptureCandidate = preCaptureCandidates.some(([r, c]) => r === row && c === col);
     const canClick = onSquareClick && !disableInteraction;
 
     return (
@@ -57,6 +62,7 @@ const Board = ({
         isSelected={isSelected}
         isMoveable={isMoveable}
         isLastMove={isLastMove}
+        isPreCaptureCandidate={isPreCaptureCandidate}
         onClick={canClick ? () => onSquareClick(row, col) : undefined}
       />
     );
@@ -71,6 +77,13 @@ const Board = ({
         {Array.from({ length: 8 }, (_, row) =>
           Array.from({ length: 8 }, (_, col) => renderSquare(row, col))
         )}
+
+        <PreCaptureOverlay
+          preCaptureAnimationPayload={preCaptureAnimationPayload}
+          boardRef={boardGridRef}
+          showDebug={showAnimationDebug}
+          onAnimationComplete={onPreCaptureAnimationComplete}
+        />
 
         <MovingPieceOverlay
           animationPayload={animationPayload}

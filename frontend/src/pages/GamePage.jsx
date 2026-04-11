@@ -47,6 +47,7 @@ const GAME_MODE_LABEL = {
 
 // Toggle this to true when you want visual marker dots and piece outline during animation debugging.
 const SHOW_ANIMATION_DEBUG = false;
+const PRE_CAPTURE_ANIMATION_DURATION = 250;
 const CAPTURE_ANIMATION_DURATION = 240;
 const CAPTURE_SOUND_DATA_URI =
   'data:audio/wav;base64,' +
@@ -119,6 +120,22 @@ function countEngineBoard(board) {
   return { blue, red };
 }
 
+function getPreCaptureCandidates(moves = []) {
+  const uniqueSources = new Set();
+  const sources = [];
+
+  for (const move of moves) {
+    if (!move?.isJump || !Array.isArray(move.from) || move.from.length < 2) continue;
+    const [row, col] = move.from;
+    const key = `${row},${col}`;
+    if (uniqueSources.has(key)) continue;
+    uniqueSources.add(key);
+    sources.push([row, col]);
+  }
+
+  return sources;
+}
+
 const GamePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -139,6 +156,7 @@ const GamePage = () => {
   const [history,        setHistory]        = useState([]);
 
   const [legalMoves,     setLegalMoves]     = useState([]);
+  const [preCaptureCandidates, setPreCaptureCandidates] = useState([]);
   const [moveableSet,    setMoveableSet]    = useState(new Set());
   const [destinationMap, setDestinationMap] = useState({});
 
@@ -155,7 +173,9 @@ const GamePage = () => {
   const [agentDecisionsByColor, setAgentDecisionsByColor] = useState({ blue: null, red: null });
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
 
-  // MVP animation state (single-step only).
+  // MVP staged animation state.
+  const [isPreCaptureAnimating, setIsPreCaptureAnimating] = useState(false);
+  const [preCaptureAnimationPayload, setPreCaptureAnimationPayload] = useState(null);
   const [isMoveAnimating, setIsMoveAnimating] = useState(false);
   const [animationPayload, setAnimationPayload] = useState(null);
   const [isCaptureAnimating, setIsCaptureAnimating] = useState(false);
@@ -205,7 +225,8 @@ const GamePage = () => {
   const isCurrentTurnHuman = currentPlayerType === 'human';
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
-  const interactionLocked = loading || isFetchingAgentMove || isMoveAnimating || isCaptureAnimating;
+  const interactionLocked =
+    loading || isFetchingAgentMove || isPreCaptureAnimating || isMoveAnimating || isCaptureAnimating;
 
   const currentTurnActionLabel = isCurrentTurnHuman ? 'Player Turn' : `${currentPlayerProfile.name} Turn`;
 
@@ -222,6 +243,7 @@ const GamePage = () => {
   const loadLegalMoves = useCallback(async (board, player) => {
     if (!board || winner) {
       setLegalMoves([]);
+      setPreCaptureCandidates([]);
       setMoveableSet(new Set());
       setDestinationMap({});
       return;
@@ -229,6 +251,7 @@ const GamePage = () => {
     try {
       const data = await fetchLegalMoves(board, player);
       setLegalMoves(data.moves);
+      setPreCaptureCandidates(getPreCaptureCandidates(data.moves));
       setMoveableSet(new Set(data.moveableSquares));
       setDestinationMap(data.destinationMap);
     } catch (err) {
@@ -338,11 +361,13 @@ const GamePage = () => {
         await loadLegalMoves(result.board, result.currentPlayer);
       } else {
         setLegalMoves([]);
+        setPreCaptureCandidates([]);
         setMoveableSet(new Set());
         setDestinationMap({});
       }
     } else {
       setLegalMoves([]);
+      setPreCaptureCandidates([]);
       setMoveableSet(new Set());
       setDestinationMap({});
     }
@@ -363,6 +388,40 @@ const GamePage = () => {
 
     if (pending.committed) {
       console.warn(`[animation] finalize skipped id=${animationId} reason=${reason} (already committed)`);
+      return;
+    }
+
+    const preCaptureStageDone =
+      reason === 'pre-capture-complete' ||
+      reason === 'pre-capture-watchdog-timeout' ||
+      reason === 'pre-capture-no-board-ref' ||
+      reason === 'pre-capture-invalid-board-size';
+
+    if (pending.preCaptureRequired && !pending.moveAnimationStarted) {
+      if (!preCaptureStageDone) {
+        console.warn(`[animation] pre-capture pending id=${animationId} reason=${reason}`);
+        return;
+      }
+
+      pending.moveAnimationStarted = true;
+      pendingCommitRef.current = pending;
+
+      setIsPreCaptureAnimating(false);
+      setPreCaptureAnimationPayload(null);
+      setAnimationPayload(pending.moveAnimationPayload ?? null);
+      setIsMoveAnimating(true);
+
+      if (animationWatchdogRef.current) {
+        clearTimeout(animationWatchdogRef.current);
+      }
+
+      const movementDuration = Math.max(120, pending.moveAnimationPayload?.duration ?? 320);
+      animationWatchdogRef.current = setTimeout(() => {
+        console.warn(`[animation] watchdog force-commit id=${animationId}`);
+        void finalizeAnimation(animationId, 'watchdog-timeout');
+      }, movementDuration + 450);
+
+      console.log(`[animation] movement stage start id=${animationId} after pre-capture (${reason})`);
       return;
     }
 
@@ -417,9 +476,11 @@ const GamePage = () => {
     } finally {
       pendingCommitRef.current = null;
       setPendingCommit(null);
+      setPreCaptureAnimationPayload(null);
       setAnimationPayload(null);
       setCaptureAnimationPayload(null);
       setHiddenPieceAt(null);
+      setIsPreCaptureAnimating(false);
       setIsCaptureAnimating(false);
       setIsMoveAnimating(false);
       setLoading(false);
@@ -427,7 +488,7 @@ const GamePage = () => {
     }
   }, [commitMoveResult, playCaptureSound]);
 
-  // Queues a single-step overlay animation (MVP) and delays state commit until finalizeAnimation.
+  // Queues staged overlay animation (pre-capture -> movement -> capture) and delays state commit.
   const queueMoveAnimation = useCallback(({ move, result, snapshot, agentDecision = null, actor = null }) => {
     const from = move?.from;
     const to = move?.to?.[0];
@@ -467,14 +528,24 @@ const GamePage = () => {
 
     const animationId = ++animationIdRef.current;
     const duration = move.isJump ? 460 : 320;
+    const preCaptureRequired = Boolean(move?.isJump);
 
-    const nextPayload = {
+    const nextMovePayload = {
       animationId,
       from,
       to,
       piece: movingPiece,
       duration,
     };
+
+    const nextPreCapturePayload = preCaptureRequired
+      ? {
+          animationId,
+          from,
+          piece: movingPiece,
+          duration: PRE_CAPTURE_ANIMATION_DURATION,
+        }
+      : null;
 
     const nextPending = {
       animationId,
@@ -484,24 +555,46 @@ const GamePage = () => {
       agentDecision,
       actor,
       capturePieces,
+      preCaptureRequired,
+      moveAnimationPayload: nextMovePayload,
+      moveAnimationStarted: !preCaptureRequired,
       captureAnimationStarted: false,
       committed: false,
     };
 
-    console.log('[animation] payload', nextPayload);
+    console.log('[animation] payload', nextMovePayload);
     console.log(`[animation] queued id=${animationId}`);
 
     pendingCommitRef.current = nextPending;
     setPendingCommit(nextPending);
-    setAnimationPayload(nextPayload);
+    setPreCaptureAnimationPayload(null);
+    setAnimationPayload(null);
     setCaptureAnimationPayload(null);
+    // Ensure source piece suppression is active before any pre-capture overlay frame is rendered.
     setHiddenPieceAt(from);
+    setIsPreCaptureAnimating(false);
     setIsCaptureAnimating(false);
-    setIsMoveAnimating(true);
+    setIsMoveAnimating(false);
 
     if (animationWatchdogRef.current) {
       clearTimeout(animationWatchdogRef.current);
     }
+
+    if (preCaptureRequired) {
+      setPreCaptureAnimationPayload(nextPreCapturePayload);
+      setIsPreCaptureAnimating(true);
+
+      animationWatchdogRef.current = setTimeout(() => {
+        console.warn(`[animation] pre-capture watchdog force-continue id=${animationId}`);
+        void finalizeAnimation(animationId, 'pre-capture-watchdog-timeout');
+      }, PRE_CAPTURE_ANIMATION_DURATION + 220);
+
+      console.log(`[animation] pre-capture stage start id=${animationId}`);
+      return;
+    }
+
+    setAnimationPayload(nextMovePayload);
+    setIsMoveAnimating(true);
 
     // Safety fallback: force finalize if the rAF completion callback never fires.
     animationWatchdogRef.current = setTimeout(() => {
@@ -524,7 +617,7 @@ const GamePage = () => {
   }, []);
 
   const handleNewGame = useCallback(async (playerConfig = players) => {
-    if (isMoveAnimating) return;
+    if (isMoveAnimating || isPreCaptureAnimating) return;
     setLoading(true);
     setApiError(null);
     autoPlayedTurnRef.current = null;
@@ -536,9 +629,12 @@ const GamePage = () => {
 
     pendingCommitRef.current = null;
     setPendingCommit(null);
+    setPreCaptureCandidates([]);
+    setPreCaptureAnimationPayload(null);
     setAnimationPayload(null);
     setCaptureAnimationPayload(null);
     setHiddenPieceAt(null);
+    setIsPreCaptureAnimating(false);
     setIsCaptureAnimating(false);
     setIsMoveAnimating(false);
 
@@ -565,6 +661,7 @@ const GamePage = () => {
         await loadLegalMoves(data.board, data.currentPlayer);
       } else {
         setLegalMoves([]);
+        setPreCaptureCandidates([]);
         setMoveableSet(new Set());
         setDestinationMap({});
       }
@@ -573,7 +670,7 @@ const GamePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [isMoveAnimating, loadLegalMoves, players]);
+  }, [isMoveAnimating, isPreCaptureAnimating, loadLegalMoves, players]);
 
   // Auto-start when navigated with ?autostart=true
   useEffect(() => {
@@ -592,7 +689,7 @@ const GamePage = () => {
   }, []);
 
   const handleUndo = async () => {
-    if (history.length === 0 || loading || isMoveAnimating) return;
+    if (history.length === 0 || loading || isMoveAnimating || isPreCaptureAnimating) return;
     setLoading(true);
     setApiError(null);
     const snap = history[history.length - 1];
@@ -610,6 +707,7 @@ const GamePage = () => {
         await loadLegalMoves(snap.engineBoard, snap.currentPlayer);
       } else {
         setLegalMoves([]);
+        setPreCaptureCandidates([]);
         setMoveableSet(new Set());
         setDestinationMap({});
       }
@@ -621,10 +719,11 @@ const GamePage = () => {
   };
 
   const handleResign = () => {
-    if (winner || mode !== 'play' || isMoveAnimating) return;
+    if (winner || mode !== 'play' || isMoveAnimating || isPreCaptureAnimating) return;
     const resignWinner = currentPlayer === 'blue' ? 'red' : 'blue';
     setWinner(resignWinner);
     setLegalMoves([]);
+    setPreCaptureCandidates([]);
     setMoveableSet(new Set());
   };
 
@@ -727,6 +826,7 @@ const GamePage = () => {
         setLastAgentDecision(failedDecision);
         setAgentDecisionsByColor(prev => ({ ...prev, [currentPlayer]: failedDecision }));
         setLegalMoves([]);
+        setPreCaptureCandidates([]);
         setMoveableSet(new Set());
         setDestinationMap({});
         setIsFetchingAgentMove(false);
@@ -906,7 +1006,7 @@ const GamePage = () => {
               <CardContent className="space-y-3 p-4">
                 <Button
                   onClick={handleNewGame}
-                  disabled={loading || isFetchingAgentMove || isMoveAnimating}
+                  disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating}
                   className="h-11 w-full rounded-xl bg-blue-500/80 font-semibold text-white hover:bg-blue-500"
                 >
                   {(loading || isFetchingAgentMove) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -930,7 +1030,7 @@ const GamePage = () => {
                 {mode === 'play' && hasAiPlayersInMatch && (
                   <Button
                     onClick={handleAgentMove}
-                    disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || !!winner}
+                    disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner}
                     className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
                   >
                     {isFetchingAgentMove && !autoPlayEnabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -952,13 +1052,13 @@ const GamePage = () => {
                     }}
                     variant="outline"
                     className="h-11 rounded-xl border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
-                    disabled={!lastMove || isFetchingAgentMove || isMoveAnimating}
+                    disabled={!lastMove || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating}
                   >
                     Last Move
                   </Button>
                   <Button
                     onClick={() => setShowResignModal(true)}
-                    disabled={loading || isFetchingAgentMove || isMoveAnimating || !!winner || mode !== 'play'}
+                    disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner || mode !== 'play'}
                     variant="outline"
                     className="h-11 rounded-xl border-rose-300/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
                   >
@@ -1017,8 +1117,11 @@ const GamePage = () => {
                     lastMoveHighlights={lastMoveHighlights}
                     hiddenPieceAt={hiddenPieceAt}
                     hiddenCaptureSquares={hiddenCaptureSquares}
+                    preCaptureCandidates={preCaptureCandidates}
+                    preCaptureAnimationPayload={preCaptureAnimationPayload}
                     animationPayload={animationPayload}
                     captureAnimationPayload={captureAnimationPayload}
+                    onPreCaptureAnimationComplete={finalizeAnimation}
                     onAnimationComplete={finalizeAnimation}
                     onCaptureAnimationComplete={finalizeAnimation}
                     disableInteraction={interactionLocked}

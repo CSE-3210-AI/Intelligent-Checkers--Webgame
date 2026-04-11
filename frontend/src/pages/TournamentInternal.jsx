@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function TournamentInternal() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-blue-50 via-slate-100 to-blue-100 px-4 py-12 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-4 py-12 relative">
       <button
         type="button"
         aria-label="Go back"

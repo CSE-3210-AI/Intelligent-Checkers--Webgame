@@ -553,7 +553,7 @@ const GamePage = () => {
           explanation: decision.error,
           type: actor.type,
           name: actor.name,
-        });
+        };
         setIsFetchingAgentMove(false);
         return;
       }

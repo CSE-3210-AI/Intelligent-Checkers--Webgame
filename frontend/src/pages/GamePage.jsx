@@ -47,6 +47,10 @@ const GAME_MODE_LABEL = {
 
 // Toggle this to true when you want visual marker dots and piece outline during animation debugging.
 const SHOW_ANIMATION_DEBUG = false;
+const CAPTURE_ANIMATION_DURATION = 240;
+const CAPTURE_SOUND_DATA_URI =
+  'data:audio/wav;base64,' +
+  'UklGRoQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWAEAACAvOTsz5lbKRQiT4zE5ubFjVElFytbl8vm4LqCSSIaNGeh0eXZr3ZBIB8+cqrV49GkbDogJUh9s9jgyJliNSEsUoe62tu/j1kxIzNckcDa1raEUS4mO2ebxtnQrHpKLCpDcaPK2MmjcUQsLkx7q83VwploPyw0VYSxztK6kGA7LTpejbfPzbKGWTkwQWeVvM/IqX5TNzNIcJ3AzsKhdU02N1B5pMPMvJhtSDY8WIGqxcm1kGZFN0Fgia/Gxa6IX0I5R2iRtMbBp4BaQDtNcJe3xbyfeFQ/P1R4nrrDtphxUD9DW3+jvMGwkGtNP0dihqi9vqqJZUpBTGmNrL26pIJgSENScJOwvbade1tHRlh3mbK8sZd1V0dJXn2etLqskG9UR01khKK1t6eKalFIUWqKpra0oYNlT0pWcI+ptrCbfWFOTFt2lKy1rJZ4XU5PYHyZrrOokHNaTlJmgp2vsaOKbldOVmuHoa+vn4VpVlBacIyjr6yaf2VUUl52kaavqJR6YlRUY3uVqK2kj3VfVFdngJiprKCKcV1UWmyFnKqqnIVtW1VdcYmeqqeYgWlaV2F2jaGppJN8ZllZZXqRoqihj3hkWVtpf5Wkp52KdGJZXm2DmKSlmoZwYFphcoeapaOWgm1fW2R2i5ykoZJ+al5dZ3qOnqSejnpoXl9rfpGfo5uKdmZeYW+ClKChmIZzZF5kcoWWoJ+Ug3BjX2Z2iZignZF/bmJhaXqMmqCbjXxrYmJtfY+bn5iKeGliZHCAkZyelod1aGJmc4STnJyTg3NnY2l2h5WcmpCAcGZka3mKlpyYjX1uZmVufYyYm5aKem1lZ3GAjpialId3a2ZpdIKQmZmRhHVqZmt3hZKZmI+Bc2lnbXmIk5mWjH5xaWhwfIqUmJSJe29panJ/jJWXkod5bmlrdIGOlpaQhHdtaW13hI+WlY2BdWxqb3mGkZaUi39zbGtxfIiSlZKJfXJrbHN+ipOVkIZ7cGxtdYGMk5SOhHlvbG93g42Tk4yCd29scHqFjpOSioB1bm1yfIePk5CIfnRubnR+iJCSj4Z8c25vdoCKkZKNhHpybnF4gouRkYuCeHFvcnqEjJGQioB3cG9zfIWNkY+IfnZwcHV+h46QjYZ9dXBxd3+Ij5CMhHt0cHJ4gYqPj4qCenNxc3qDi4+OiYF4cnF1fISLj42Hf3dycnZ9hoyPjIZ+dnJzd3+HjY6LhHx1cnN5gYiNjYqDe3VydHqCiY2NiIF6dHN2fIOKjYyHgHh0c3d9hYuNi4V+eHR0eH+Gi42KhH13dHV5gIeLjImDfHZ0dnuCiIuLiIF7dnR3fIOJi4uGgHp1dXh9hImLioV/eXV1eX+FiouJhH54dXZ6gIaKi4iDfXh1d3uBh4qKh4F8d3Z3fIKHioqGgHt3dnh9g4iKiYV/end2eX6EiIqIhH55d3d6gIWJioeDfXl3eHuBhomJhoJ8eHd4fIKGiYmFgXx4d3l9g4eJiIWA';
 
 function getModeFromQuery(params) {
   if (params.get('autostart') === 'true') return 'human-vs-human';
@@ -154,12 +158,16 @@ const GamePage = () => {
   // MVP animation state (single-step only).
   const [isMoveAnimating, setIsMoveAnimating] = useState(false);
   const [animationPayload, setAnimationPayload] = useState(null);
+  const [isCaptureAnimating, setIsCaptureAnimating] = useState(false);
+  const [captureAnimationPayload, setCaptureAnimationPayload] = useState(null);
   const [pendingCommit, setPendingCommit] = useState(null);
   const [hiddenPieceAt, setHiddenPieceAt] = useState(null);
 
   const animationIdRef = useRef(0);
   const pendingCommitRef = useRef(null);
   const animationWatchdogRef = useRef(null);
+  const captureAudioRef = useRef(null);
+  const lastCaptureSoundAnimationIdRef = useRef(null);
   const autoPlayedTurnRef = useRef(null);
 
   const [startTime, setStartTime] = useState(() => Date.now());
@@ -197,7 +205,7 @@ const GamePage = () => {
   const isCurrentTurnHuman = currentPlayerType === 'human';
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
-  const interactionLocked = loading || isFetchingAgentMove || isMoveAnimating;
+  const interactionLocked = loading || isFetchingAgentMove || isMoveAnimating || isCaptureAnimating;
 
   const currentTurnActionLabel = isCurrentTurnHuman ? 'Player Turn' : `${currentPlayerProfile.name} Turn`;
 
@@ -227,6 +235,71 @@ const GamePage = () => {
       setApiError(`Failed to load legal moves: ${err.message}`);
     }
   }, [winner]);
+
+  const ensureCaptureAudio = useCallback(() => {
+    if (!captureAudioRef.current) {
+      captureAudioRef.current = new Audio(CAPTURE_SOUND_DATA_URI);
+      captureAudioRef.current.preload = 'auto';
+      captureAudioRef.current.volume = 0.9;
+    }
+
+    return captureAudioRef.current;
+  }, []);
+
+  useEffect(() => {
+    const unlockCaptureAudio = () => {
+      try {
+        const audio = ensureCaptureAudio();
+        const previousVolume = audio.volume;
+        audio.volume = 0;
+        const unlock = audio.play();
+        if (unlock?.then) {
+          unlock
+            .then(() => {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.volume = previousVolume;
+            })
+            .catch(() => {
+              audio.volume = previousVolume;
+            });
+        } else {
+          audio.volume = previousVolume;
+        }
+      } catch {
+        // Audio unlock is best-effort only.
+      }
+
+      window.removeEventListener('pointerdown', unlockCaptureAudio);
+      window.removeEventListener('keydown', unlockCaptureAudio);
+    };
+
+    window.addEventListener('pointerdown', unlockCaptureAudio);
+    window.addEventListener('keydown', unlockCaptureAudio);
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockCaptureAudio);
+      window.removeEventListener('keydown', unlockCaptureAudio);
+    };
+  }, [ensureCaptureAudio]);
+
+  const playCaptureSound = useCallback((animationId) => {
+    if (lastCaptureSoundAnimationIdRef.current === animationId) return;
+    lastCaptureSoundAnimationIdRef.current = animationId;
+
+    try {
+      const audio = ensureCaptureAudio();
+      audio.currentTime = 0;
+      const playback = audio.play();
+      if (playback?.catch) {
+        playback.catch(() => {
+          // Browser autoplay restrictions should not block animation flow.
+        });
+      }
+    } catch {
+      // Audio failures are non-blocking for gameplay and animations.
+    }
+  }, [ensureCaptureAudio]);
 
   // Applies the already-validated backend result after the visual glide completes.
   const commitMoveResult = useCallback(async ({ result, move, snapshot, agentDecision = null, actor = null }) => {
@@ -293,6 +366,39 @@ const GamePage = () => {
       return;
     }
 
+    const hasCapturePieces = Array.isArray(pending.capturePieces) && pending.capturePieces.length > 0;
+    const captureStageDone =
+      reason === 'capture-complete' ||
+      reason === 'capture-watchdog-timeout' ||
+      reason === 'capture-no-board-ref' ||
+      reason === 'capture-invalid-board-size';
+
+    if (hasCapturePieces && !captureStageDone) {
+      if (!pending.captureAnimationStarted) {
+        pending.captureAnimationStarted = true;
+        pendingCommitRef.current = pending;
+        setIsCaptureAnimating(true);
+        setCaptureAnimationPayload({
+          animationId,
+          pieces: pending.capturePieces,
+          duration: CAPTURE_ANIMATION_DURATION,
+        });
+        playCaptureSound(animationId);
+        console.log(`[animation] capture stage start id=${animationId}`);
+      }
+
+      if (animationWatchdogRef.current) {
+        clearTimeout(animationWatchdogRef.current);
+      }
+
+      animationWatchdogRef.current = setTimeout(() => {
+        console.warn(`[animation] capture watchdog force-commit id=${animationId}`);
+        void finalizeAnimation(animationId, 'capture-watchdog-timeout');
+      }, CAPTURE_ANIMATION_DURATION + 280);
+
+      return;
+    }
+
     pending.committed = true;
     pendingCommitRef.current = pending;
 
@@ -312,18 +418,32 @@ const GamePage = () => {
       pendingCommitRef.current = null;
       setPendingCommit(null);
       setAnimationPayload(null);
+      setCaptureAnimationPayload(null);
       setHiddenPieceAt(null);
+      setIsCaptureAnimating(false);
       setIsMoveAnimating(false);
       setLoading(false);
       setIsFetchingAgentMove(false);
     }
-  }, [commitMoveResult]);
+  }, [commitMoveResult, playCaptureSound]);
 
   // Queues a single-step overlay animation (MVP) and delays state commit until finalizeAnimation.
   const queueMoveAnimation = useCallback(({ move, result, snapshot, agentDecision = null, actor = null }) => {
     const from = move?.from;
     const to = move?.to?.[0];
     const movingPiece = from ? displayBoard?.[from[0]]?.[from[1]] : null;
+    const capturePieces = (move?.captures ?? [])
+      .map(([row, col]) => {
+        const capturedPiece = displayBoard?.[row]?.[col];
+        if (!capturedPiece) return null;
+        return {
+          row,
+          col,
+          color: capturedPiece.color,
+          isKing: capturedPiece.isKing,
+        };
+      })
+      .filter(Boolean);
 
     if (!from || !to || !movingPiece) {
       const fallbackId = ++animationIdRef.current;
@@ -335,6 +455,8 @@ const GamePage = () => {
         snapshot,
         agentDecision,
         actor,
+        capturePieces,
+        captureAnimationStarted: false,
         committed: false,
       };
       pendingCommitRef.current = fallbackPending;
@@ -361,6 +483,8 @@ const GamePage = () => {
       snapshot,
       agentDecision,
       actor,
+      capturePieces,
+      captureAnimationStarted: false,
       committed: false,
     };
 
@@ -370,7 +494,9 @@ const GamePage = () => {
     pendingCommitRef.current = nextPending;
     setPendingCommit(nextPending);
     setAnimationPayload(nextPayload);
+    setCaptureAnimationPayload(null);
     setHiddenPieceAt(from);
+    setIsCaptureAnimating(false);
     setIsMoveAnimating(true);
 
     if (animationWatchdogRef.current) {
@@ -389,6 +515,11 @@ const GamePage = () => {
       if (animationWatchdogRef.current) {
         clearTimeout(animationWatchdogRef.current);
       }
+
+      if (captureAudioRef.current) {
+        captureAudioRef.current.pause();
+        captureAudioRef.current = null;
+      }
     };
   }, []);
 
@@ -406,7 +537,9 @@ const GamePage = () => {
     pendingCommitRef.current = null;
     setPendingCommit(null);
     setAnimationPayload(null);
+    setCaptureAnimationPayload(null);
     setHiddenPieceAt(null);
+    setIsCaptureAnimating(false);
     setIsMoveAnimating(false);
 
     try {
@@ -649,6 +782,11 @@ const GamePage = () => {
     return [lastMove.from, lastMove.to];
   }, [showLastMove, lastMove]);
 
+  const hiddenCaptureSquares = useMemo(() => {
+    if (!isCaptureAnimating || !captureAnimationPayload?.pieces?.length) return [];
+    return captureAnimationPayload.pieces.map(piece => [piece.row, piece.col]);
+  }, [captureAnimationPayload, isCaptureAnimating]);
+
   const bluePlayer = players.blue ?? { name: 'Player 1', type: 'human' };
   const redPlayer = players.red ?? { name: 'Player 2', type: 'human' };
 
@@ -878,8 +1016,11 @@ const GamePage = () => {
                     moveable={moveableSet}
                     lastMoveHighlights={lastMoveHighlights}
                     hiddenPieceAt={hiddenPieceAt}
+                    hiddenCaptureSquares={hiddenCaptureSquares}
                     animationPayload={animationPayload}
+                    captureAnimationPayload={captureAnimationPayload}
                     onAnimationComplete={finalizeAnimation}
+                    onCaptureAnimationComplete={finalizeAnimation}
                     disableInteraction={interactionLocked}
                     showAnimationDebug={SHOW_ANIMATION_DEBUG}
                     onSquareClick={handleSquareClick}

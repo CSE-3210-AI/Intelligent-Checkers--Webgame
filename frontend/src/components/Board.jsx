@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import Square from './Square';
 import MovingPieceOverlay from './MovingPieceOverlay';
+import CapturedPiecesOverlay from './CapturedPiecesOverlay';
 
 /**
  * Board – renders the 8×8 checkers grid.
@@ -20,8 +21,11 @@ const Board = ({
   moveable = new Set(),
   lastMoveHighlights = [],
   hiddenPieceAt = null,
+  hiddenCaptureSquares = [],
   animationPayload = null,
+  captureAnimationPayload = null,
   onAnimationComplete,
+  onCaptureAnimationComplete,
   disableInteraction = false,
   showAnimationDebug = false,
   onSquareClick,
@@ -32,9 +36,11 @@ const Board = ({
     const isDark = (row + col) % 2 === 1;
     const piece = pieces[row]?.[col] ?? null;
     const suppressPiece =
-      hiddenPieceAt !== null &&
-      hiddenPieceAt[0] === row &&
-      hiddenPieceAt[1] === col;
+      (
+        hiddenPieceAt !== null &&
+        hiddenPieceAt[0] === row &&
+        hiddenPieceAt[1] === col
+      ) || hiddenCaptureSquares.some(([r, c]) => r === row && c === col);
     const isHighlighted = highlights.some(([r, c]) => r === row && c === col);
     const isSelected = selected !== null && selected[0] === row && selected[1] === col;
     const isMoveable = moveable.has(`${row},${col}`);
@@ -71,6 +77,13 @@ const Board = ({
           boardRef={boardGridRef}
           showDebug={showAnimationDebug}
           onAnimationComplete={onAnimationComplete}
+        />
+
+        <CapturedPiecesOverlay
+          captureAnimationPayload={captureAnimationPayload}
+          boardRef={boardGridRef}
+          showDebug={showAnimationDebug}
+          onAnimationComplete={onCaptureAnimationComplete}
         />
       </div>
     </div>

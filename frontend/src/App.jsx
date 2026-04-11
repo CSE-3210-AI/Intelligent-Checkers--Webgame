@@ -10,6 +10,7 @@ import SelectInternalAgent from './pages/SelectInternalAgent'
 import TournamentModeSelection from './pages/TournamentModeSelection'
 import TournamentInternal from './pages/TournamentInternal'
 import TournamentOnline from './pages/TournamentOnline'
+import HowToPlay from './pages/HowToPlay'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/tournaments" element={<TournamentModeSelection />} />
           <Route path="/tournament/internal" element={<TournamentInternal />} />
           <Route path="/tournament/online" element={<TournamentOnline />} />
+          <Route path="/how-to-play" element={<HowToPlay />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
         </Routes>

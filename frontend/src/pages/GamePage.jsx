@@ -1,5 +1,5 @@
 ﻿import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,6 +43,9 @@ const GAME_MODE_LABEL = {
   'internal-ai-tournament': 'Internal AI Tournament',
   'online-benchmark': 'Online Benchmark Tournament',
 };
+
+// Toggle this to true when you want visual marker dots and piece outline during animation debugging.
+const SHOW_ANIMATION_DEBUG = false;
 
 function getModeFromQuery(params) {
   if (params.get('autostart') === 'true') return 'human-vs-human';
@@ -145,6 +148,16 @@ const GamePage = () => {
   const [isFetchingAgentMove, setIsFetchingAgentMove] = useState(false);
   const [lastAgentDecision, setLastAgentDecision] = useState(null);
 
+  // MVP animation state (single-step only).
+  const [isMoveAnimating, setIsMoveAnimating] = useState(false);
+  const [animationPayload, setAnimationPayload] = useState(null);
+  const [pendingCommit, setPendingCommit] = useState(null);
+  const [hiddenPieceAt, setHiddenPieceAt] = useState(null);
+
+  const animationIdRef = useRef(0);
+  const pendingCommitRef = useRef(null);
+  const animationWatchdogRef = useRef(null);
+
   const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed,   setElapsed]   = useState(0);
 
@@ -155,6 +168,10 @@ const GamePage = () => {
     );
     return () => clearInterval(id);
   }, [startTime]);
+
+  useEffect(() => {
+    pendingCommitRef.current = pendingCommit;
+  }, [pendingCommit]);
 
   const timerText = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
 
@@ -173,6 +190,7 @@ const GamePage = () => {
   const isCurrentTurnHuman = currentPlayerType === 'human';
   const isCurrentTurnAi = !isCurrentTurnHuman;
   const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
+  const interactionLocked = loading || isFetchingAgentMove || isMoveAnimating;
 
   const currentTurnActionLabel = currentPlayerType === 'adiba'
     ? 'Adiba Turn'
@@ -209,9 +227,177 @@ const GamePage = () => {
     }
   }, [winner]);
 
+  // Applies the already-validated backend result after the visual glide completes.
+  const commitMoveResult = useCallback(async ({ result, move, snapshot, agentDecision = null, actor = null }) => {
+    setHistory(prev => [...prev, snapshot]);
+    setEngineBoard(result.board);
+    setCurrentPlayer(result.currentPlayer);
+    setMoveCount(result.moveCount);
+    setCaptures(result.captures);
+    setWinner(result.winner);
+    setSelected(null);
+    setHighlights([]);
+    setLastMove({ from: move.from, to: move.to[0] });
+    setShowLastMove(true);
+
+    if (agentDecision) {
+      setLastAgentDecision({
+        ...agentDecision,
+        type: actor?.type,
+        name: actor?.name,
+        move_text: agentDecision.move_text ?? formatMoveText(agentDecision.move),
+      });
+    }
+
+    if (!result.winner) {
+      const nextType = players[result.currentPlayer]?.type ?? 'human';
+      if (nextType === 'human') {
+        await loadLegalMoves(result.board, result.currentPlayer);
+      } else {
+        setLegalMoves([]);
+        setMoveableSet(new Set());
+        setDestinationMap({});
+      }
+    } else {
+      setLegalMoves([]);
+      setMoveableSet(new Set());
+      setDestinationMap({});
+    }
+  }, [loadLegalMoves, players]);
+
+  // Finalizes the in-flight animation exactly once for the active animationId.
+  const finalizeAnimation = useCallback(async (animationId, reason = 'raf-complete') => {
+    const pending = pendingCommitRef.current;
+    if (!pending) {
+      console.warn(`[animation] finalize skipped id=${animationId} reason=${reason} (no pending commit)`);
+      return;
+    }
+
+    if (pending.animationId !== animationId) {
+      console.warn(`[animation] finalize skipped id=${animationId} reason=${reason} (active=${pending.animationId})`);
+      return;
+    }
+
+    if (pending.committed) {
+      console.warn(`[animation] finalize skipped id=${animationId} reason=${reason} (already committed)`);
+      return;
+    }
+
+    pending.committed = true;
+    pendingCommitRef.current = pending;
+
+    if (animationWatchdogRef.current) {
+      clearTimeout(animationWatchdogRef.current);
+      animationWatchdogRef.current = null;
+    }
+
+    console.log(`[animation] finalize start id=${animationId} reason=${reason}`);
+
+    try {
+      await commitMoveResult(pending);
+      console.log(`[animation] finalize done id=${animationId} reason=${reason}`);
+    } catch (err) {
+      setApiError(`Failed to finalize move: ${err.message}`);
+    } finally {
+      pendingCommitRef.current = null;
+      setPendingCommit(null);
+      setAnimationPayload(null);
+      setHiddenPieceAt(null);
+      setIsMoveAnimating(false);
+      setLoading(false);
+      setIsFetchingAgentMove(false);
+    }
+  }, [commitMoveResult]);
+
+  // Queues a single-step overlay animation (MVP) and delays state commit until finalizeAnimation.
+  const queueMoveAnimation = useCallback(({ move, result, snapshot, agentDecision = null, actor = null }) => {
+    const from = move?.from;
+    const to = move?.to?.[0];
+    const movingPiece = from ? displayBoard?.[from[0]]?.[from[1]] : null;
+
+    if (!from || !to || !movingPiece) {
+      const fallbackId = ++animationIdRef.current;
+      console.warn(`[animation] missing payload data, force-committing id=${fallbackId}`);
+      const fallbackPending = {
+        animationId: fallbackId,
+        move,
+        result,
+        snapshot,
+        agentDecision,
+        actor,
+        committed: false,
+      };
+      pendingCommitRef.current = fallbackPending;
+      setPendingCommit(fallbackPending);
+      void finalizeAnimation(fallbackId, 'force-commit-missing-payload');
+      return;
+    }
+
+    const animationId = ++animationIdRef.current;
+    const duration = move.isJump ? 460 : 320;
+
+    const nextPayload = {
+      animationId,
+      from,
+      to,
+      piece: movingPiece,
+      duration,
+    };
+
+    const nextPending = {
+      animationId,
+      move,
+      result,
+      snapshot,
+      agentDecision,
+      actor,
+      committed: false,
+    };
+
+    console.log('[animation] payload', nextPayload);
+    console.log(`[animation] queued id=${animationId}`);
+
+    pendingCommitRef.current = nextPending;
+    setPendingCommit(nextPending);
+    setAnimationPayload(nextPayload);
+    setHiddenPieceAt(from);
+    setIsMoveAnimating(true);
+
+    if (animationWatchdogRef.current) {
+      clearTimeout(animationWatchdogRef.current);
+    }
+
+    // Safety fallback: force finalize if the rAF completion callback never fires.
+    animationWatchdogRef.current = setTimeout(() => {
+      console.warn(`[animation] watchdog force-commit id=${animationId}`);
+      void finalizeAnimation(animationId, 'watchdog-timeout');
+    }, duration + 450);
+  }, [displayBoard, finalizeAnimation]);
+
+  useEffect(() => {
+    return () => {
+      if (animationWatchdogRef.current) {
+        clearTimeout(animationWatchdogRef.current);
+      }
+    };
+  }, []);
+
   const handleNewGame = useCallback(async (playerConfig = players) => {
+    if (isMoveAnimating) return;
     setLoading(true);
     setApiError(null);
+
+    if (animationWatchdogRef.current) {
+      clearTimeout(animationWatchdogRef.current);
+      animationWatchdogRef.current = null;
+    }
+
+    pendingCommitRef.current = null;
+    setPendingCommit(null);
+    setAnimationPayload(null);
+    setHiddenPieceAt(null);
+    setIsMoveAnimating(false);
+
     try {
       const data = await initGame();
       setEngineBoard(data.board);
@@ -242,7 +428,7 @@ const GamePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadLegalMoves, players]);
+  }, [isMoveAnimating, loadLegalMoves, players]);
 
   // Auto-start when navigated with ?autostart=true
   useEffect(() => {
@@ -257,7 +443,7 @@ const GamePage = () => {
   }, []);
 
   const handleUndo = async () => {
-    if (history.length === 0 || loading) return;
+    if (history.length === 0 || loading || isMoveAnimating) return;
     setLoading(true);
     setApiError(null);
     const snap = history[history.length - 1];
@@ -286,7 +472,7 @@ const GamePage = () => {
   };
 
   const handleResign = () => {
-    if (winner || mode !== 'play') return;
+    if (winner || mode !== 'play' || isMoveAnimating) return;
     const resignWinner = currentPlayer === 'blue' ? 'red' : 'blue';
     setWinner(resignWinner);
     setLegalMoves([]);
@@ -300,7 +486,7 @@ const GamePage = () => {
   };
 
   const handleSquareClick = async (row, col) => {
-    if (loading || isFetchingAgentMove || winner || mode !== 'play' || isAiTurn) return;
+    if (interactionLocked || winner || mode !== 'play' || isAiTurn) return;
 
     if (selected && highlights.some(([r, c]) => r === row && c === col)) {
       const move = legalMoves.find(
@@ -317,32 +503,9 @@ const GamePage = () => {
         const snapshot = { engineBoard, currentPlayer, moveCount, captures };
         try {
           const result = await sendMove(engineBoard, move, currentPlayer, captures, moveCount);
-          setHistory(prev => [...prev, snapshot]);
-          setEngineBoard(result.board);
-          setCurrentPlayer(result.currentPlayer);
-          setMoveCount(result.moveCount);
-          setCaptures(result.captures);
-          setWinner(result.winner);
-          setSelected(null);
-          setHighlights([]);
-          setLastMove({ from: move.from, to: move.to[0] });
-          setShowLastMove(true);
-          if (!result.winner) {
-            const nextType = players[result.currentPlayer]?.type ?? 'human';
-            if (nextType === 'human') {
-              await loadLegalMoves(result.board, result.currentPlayer);
-            } else {
-              setLegalMoves([]);
-              setMoveableSet(new Set());
-              setDestinationMap({});
-            }
-          } else {
-            setLegalMoves([]);
-            setMoveableSet(new Set());
-          }
+          queueMoveAnimation({ move, result, snapshot });
         } catch (err) {
           setApiError(`Move failed: ${err.message}`);
-        } finally {
           setLoading(false);
         }
       } else {
@@ -363,7 +526,7 @@ const GamePage = () => {
   };
 
   const handleAgentMove = async () => {
-    if (!isAiTurn || !engineBoard || loading || isFetchingAgentMove) return;
+    if (!isAiTurn || !engineBoard || interactionLocked) return;
 
     const actor = players[currentPlayer] ?? { name: 'AI Agent', type: 'internal_ai', agentKey: null };
 
@@ -383,6 +546,7 @@ const GamePage = () => {
         decision = await getAgentMeghaMove(engineBoard, currentPlayer);
       } else {
         setApiError(`${actor.name} is not implemented yet. Add ${actor.name} backend logic first.`);
+        setIsFetchingAgentMove(false);
         return;
       }
 
@@ -396,6 +560,7 @@ const GamePage = () => {
           type: actor.type,
           name: actor.name,
         });
+        setIsFetchingAgentMove(false);
         return;
       }
 
@@ -413,44 +578,22 @@ const GamePage = () => {
         setLegalMoves([]);
         setMoveableSet(new Set());
         setDestinationMap({});
+        setIsFetchingAgentMove(false);
         return;
       }
 
       const snapshot = { engineBoard, currentPlayer, moveCount, captures };
       const result = await sendMove(engineBoard, decision.move, currentPlayer, captures, moveCount);
 
-      setHistory(prev => [...prev, snapshot]);
-      setEngineBoard(result.board);
-      setCurrentPlayer(result.currentPlayer);
-      setMoveCount(result.moveCount);
-      setCaptures(result.captures);
-      setWinner(result.winner);
-      setLastMove({ from: decision.move.from, to: decision.move.to[0] });
-      setShowLastMove(true);
-      setLastAgentDecision({
-        ...decision,
-        type: actor.type,
-        name: actor.name,
-        move_text: decision.move_text ?? formatMoveText(decision.move),
+      queueMoveAnimation({
+        move: decision.move,
+        result,
+        snapshot,
+        agentDecision: decision,
+        actor,
       });
-
-      if (!result.winner) {
-        const nextType = players[result.currentPlayer]?.type ?? 'human';
-        if (nextType === 'human') {
-          await loadLegalMoves(result.board, result.currentPlayer);
-        } else {
-          setLegalMoves([]);
-          setMoveableSet(new Set());
-          setDestinationMap({});
-        }
-      } else {
-        setLegalMoves([]);
-        setMoveableSet(new Set());
-        setDestinationMap({});
-      }
     } catch (err) {
       setApiError(`${actor.name} failed to move: ${err.message}`);
-    } finally {
       setIsFetchingAgentMove(false);
     }
   };
@@ -573,7 +716,7 @@ const GamePage = () => {
               <CardContent className="space-y-3 p-4">
                 <Button
                   onClick={handleNewGame}
-                  disabled={loading || isFetchingAgentMove}
+                  disabled={loading || isFetchingAgentMove || isMoveAnimating}
                   className="h-11 w-full rounded-xl bg-blue-500/80 font-semibold text-white hover:bg-blue-500"
                 >
                   {(loading || isFetchingAgentMove) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -583,7 +726,7 @@ const GamePage = () => {
                 {mode === 'play' && isCurrentTurnAi && (
                   <Button
                     onClick={handleAgentMove}
-                    disabled={!isAiTurn || loading || isFetchingAgentMove || !!winner}
+                    disabled={!isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || !!winner}
                     className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
                   >
                     {isFetchingAgentMove && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -601,13 +744,13 @@ const GamePage = () => {
                     }}
                     variant="outline"
                     className="h-11 rounded-xl border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
-                    disabled={!lastMove || isFetchingAgentMove}
+                    disabled={!lastMove || isFetchingAgentMove || isMoveAnimating}
                   >
                     Last Move
                   </Button>
                   <Button
                     onClick={() => setShowResignModal(true)}
-                    disabled={loading || isFetchingAgentMove || !!winner || mode !== 'play'}
+                    disabled={loading || isFetchingAgentMove || isMoveAnimating || !!winner || mode !== 'play'}
                     variant="outline"
                     className="h-11 rounded-xl border-rose-300/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
                   >
@@ -664,6 +807,11 @@ const GamePage = () => {
                     selected={selected}
                     moveable={moveableSet}
                     lastMoveHighlights={lastMoveHighlights}
+                    hiddenPieceAt={hiddenPieceAt}
+                    animationPayload={animationPayload}
+                    onAnimationComplete={finalizeAnimation}
+                    disableInteraction={interactionLocked}
+                    showAnimationDebug={SHOW_ANIMATION_DEBUG}
                     onSquareClick={handleSquareClick}
                   />
                 </div>

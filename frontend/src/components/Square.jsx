@@ -12,8 +12,9 @@ import Piece from './Piece';
  * isMoveable    bool    – this piece can make a legal move this turn
  * onClick       fn|undefined – click handler from Board
  */
-const Square = ({ isDark, piece, isHighlighted, isSelected, isMoveable, isLastMove, onClick }) => {
+const Square = ({ isDark, piece, suppressPiece = false, isHighlighted, isSelected, isMoveable, isLastMove, onClick }) => {
   const bgColor = isDark ? 'bg-gradient-to-br from-[#b08d57] to-[#7c5c2e]' : 'bg-[#F0E6D2]';
+  const visiblePiece = suppressPiece ? null : piece;
 
   return (
     <div
@@ -34,25 +35,25 @@ const Square = ({ isDark, piece, isHighlighted, isSelected, isMoveable, isLastMo
       )}
 
       {/* Destination dot – shown on empty dark squares the selected piece can reach */}
-      {isHighlighted && !piece && (
+      {isHighlighted && !visiblePiece && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
           <div className="w-8 h-8 rounded-full bg-yellow-400/75" />
         </div>
       )}
 
       {/* Destination ring – shown when a capture lands on an (edge-case) occupied square */}
-      {isHighlighted && piece && (
+      {isHighlighted && visiblePiece && (
         <div className="absolute inset-0 ring-2 ring-inset ring-yellow-400 pointer-events-none z-20 rounded-lg" />
       )}
 
       {/* Moveable ring – amber ring around pieces that can legally move this turn */}
-      {isMoveable && !isSelected && (
+      {isMoveable && !isSelected && !!visiblePiece && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="w-[80%] h-[80%] rounded-full border-[3px] border-yellow-400/80" />
         </div>
       )}
 
-      {piece && <Piece color={piece.color} isKing={piece.isKing} />}
+      {visiblePiece && <Piece color={visiblePiece.color} isKing={visiblePiece.isKing} />}
     </div>
   );
 };

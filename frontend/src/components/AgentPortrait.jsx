@@ -1,6 +1,6 @@
 import { Bot, Cpu, Users } from 'lucide-react';
 
-import adibaPortrait from '../../../ai_images/adiba.webp';
+import adibaPortrait from '../../../ai_images/agent_adoba.webp';
 import meghaPortrait from '../../../ai_images/agent_megha.webp';
 
 const AGENT_VISUALS = {

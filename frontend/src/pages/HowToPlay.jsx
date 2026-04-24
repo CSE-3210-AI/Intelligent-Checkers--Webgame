@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Crown, ShieldCheck, Swords, Target } from 'lucide-react';
+import { ArrowRight, Crown, ShieldCheck, Swords, Target } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,7 +117,6 @@ export default function HowToPlay() {
             variant="outline"
             className="border-white/20 bg-white/5 text-slate-100 hover:bg-white/10"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
           <Badge className="bg-cyan-400/20 text-cyan-100 hover:bg-cyan-400/20">Official Rule Guide</Badge>
@@ -195,7 +194,7 @@ export default function HowToPlay() {
                   </Button>
                   <Button
                     onClick={() => setActiveStep((curr) => (curr + 1) % guideSteps.length)}
-                    className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+                    className="app-action-button"
                   >
                     Next Example
                   </Button>
@@ -231,6 +230,7 @@ export default function HowToPlay() {
                   </div>
                   <Button
                     onClick={() => navigate(practiceAgent === 'megha' ? '/game?mode=agent-megha' : '/game?mode=agent-adiba')}
+                    className="app-action-button"
                   >
                     Start Practice Match
                   </Button>

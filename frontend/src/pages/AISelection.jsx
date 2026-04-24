@@ -53,25 +53,25 @@ const AISelection = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-8 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10 sm:px-6 md:px-8 md:py-12">
       <div className="max-w-5xl w-full">
         {/* Header */}
-        <div className="text-center mb-16 space-y-4">
+        <div className="text-center mb-10 space-y-4 sm:mb-12 md:mb-16">
           <Badge variant="outline" className="mb-4 px-4 py-2 bg-blue-50 border-blue-200 text-blue-700">
             <Brain className="w-4 h-4 mr-2" />
             AI Opponent
           </Badge>
           
-          <h1 className="cyber-heading text-6xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+          <h1 className="cyber-heading text-3xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent sm:text-4xl md:text-6xl">
             Select AI Difficulty
           </h1>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-600 text-base max-w-2xl mx-auto md:text-lg">
             Choose your challenge level and test your skills against our intelligent AI
           </p>
         </div>
 
         {/* Difficulty Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-10 md:mb-12">
           {difficulties.map((diff) => {
             const IconComponent = diff.icon;
             return (
@@ -120,7 +120,7 @@ const AISelection = () => {
           <Button
             onClick={() => navigate('/game')}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+            className="app-action-button"
           >
             Start Game
             <ArrowRight className="ml-2 w-5 h-5" />

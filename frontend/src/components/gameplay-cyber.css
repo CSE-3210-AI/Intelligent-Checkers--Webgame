@@ -393,3 +393,18 @@
     animation: none !important;
   }
 }
+
+@media (max-width: 768px) {
+  .cp-last-move-ring,
+  .cp-selected-overlay,
+  .cp-piece-selected,
+  .cp-piece-moving,
+  .cp-piece-pre-capture,
+  .cp-piece-king-orbit,
+  .cp-precapture-hint-trail,
+  .cp-precapture-hint-ring,
+  .cp-precapture-trail-layer,
+  .cp-precapture-energy-ring {
+    animation-duration: 1.8s !important;
+  }
+}

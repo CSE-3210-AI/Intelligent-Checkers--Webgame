@@ -27,19 +27,19 @@ const Home = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.8)]">
-        <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-black/60 px-5 py-4 backdrop-blur-md md:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between">
+        <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-black/60 px-4 py-3 backdrop-blur-md md:px-8 md:py-4">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_14px_rgba(34,211,238,0.65)]">
                 <Gamepad2 className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold tracking-wide text-white">CheckersAI</span>
+              <span className="text-lg font-bold tracking-wide text-white sm:text-xl">CheckersAI</span>
             </div>
 
             <nav className="hidden items-center gap-6 md:flex" />
 
-            <div className="flex items-center gap-3">
-              <button className="CyberButton CyberButton--secondary rounded-md px-4 py-2 font-medium">
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <button className="CyberButton CyberButton--secondary hidden rounded-md px-4 py-2 font-medium sm:inline-flex">
                 Rankings
               </button>
 
@@ -72,7 +72,7 @@ const Home = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-cyan-300/45 bg-black/45 font-semibold text-white hover:bg-cyan-500/20 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+                  className="h-11 border-cyan-300/45 bg-black/45 px-4 font-semibold text-white hover:bg-cyan-500/20 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
                   onClick={() => navigate('/signin')}
                 >
                   Sign In
@@ -82,7 +82,7 @@ const Home = () => {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center px-5 py-14 md:px-8 md:py-16">
+        <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 md:px-8 md:py-16">
           <div className="mx-auto w-full max-w-5xl">
             <div className="mb-14 space-y-4 text-center md:mb-16">
               <Badge variant="outline" className="mb-4 border-cyan-300/50 bg-black/45 px-4 py-2 text-cyan-100">
@@ -90,7 +90,7 @@ const Home = () => {
                 Ready for Battle
               </Badge>
 
-              <h1 className="cyber-heading mb-6 text-4xl font-extrabold tracking-tight text-white md:text-6xl">
+              <h1 className="cyber-heading mb-6 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-6xl">
                 Welcome to CheckersAI
               </h1>
 
@@ -103,7 +103,7 @@ const Home = () => {
             <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-5 sm:flex-row">
               <Button
                 size="lg"
-                className="h-16 min-w-[230px] rounded-xl border border-cyan-200/35 bg-linear-to-r from-cyan-500 to-blue-600 px-10 text-lg font-extrabold text-white shadow-[0_0_15px_rgba(0,198,255,0.6)] transition-all duration-200 hover:scale-[1.03] hover:brightness-110 hover:shadow-[0_0_26px_rgba(0,198,255,0.8)]"
+                className="app-action-button"
                 onClick={() => navigate('/how-to-play')}
               >
                 How to Play
@@ -111,7 +111,7 @@ const Home = () => {
 
               <Button
                 size="lg"
-                className="h-16 min-w-[230px] rounded-xl border border-blue-300/35 bg-linear-to-r from-blue-500 via-blue-600 to-indigo-600 px-10 text-lg font-extrabold text-white shadow-[0_0_18px_rgba(59,130,246,0.58)] transition-all duration-200 hover:scale-[1.03] hover:brightness-110 hover:shadow-[0_0_28px_rgba(59,130,246,0.85)]"
+                className="app-action-button"
                 onClick={() => navigate('/tournaments')}
               >
                 Tournaments

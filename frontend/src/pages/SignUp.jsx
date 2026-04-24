@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import { supabase, isSupabaseConfigured, supabaseConfigError } from '@/lib/supabase';
-import { ArrowLeft } from 'lucide-react';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -44,7 +43,7 @@ export default function SignUp() {
           className="CyberButton CyberButton--secondary absolute left-4 top-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm"
           onClick={() => navigate(-1)}
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          Back
         </button>
         <CardHeader className="pt-12 pb-4 text-center">
           <CardTitle className="text-2xl font-extrabold text-blue-900 tracking-tight">Sign Up</CardTitle>

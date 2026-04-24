@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, CircleHelp, Loader2, Settings } from 'lucide-react';
+import { CircleHelp, Loader2, Settings } from 'lucide-react';
 
 import AgentPortrait from '../components/AgentPortrait';
 import Board from '../components/Board';
@@ -45,6 +45,63 @@ const GAME_MODE_LABEL = {
   'internal-ai-tournament': 'Internal AI Tournament',
   'online-benchmark': 'Online Benchmark Tournament',
 };
+
+const AGENT_IDENTITY_THEME = {
+  megha: {
+    panel: 'border-blue-300/35 bg-blue-500/10',
+    activePanel: 'border-blue-300/55 bg-blue-500/20 shadow-[0_0_24px_rgba(56,189,248,0.2)]',
+    label: 'text-blue-100/90',
+    value: 'text-blue-50',
+    accent: 'text-blue-200/90',
+    badge: 'bg-blue-500/20 text-blue-100 hover:bg-blue-500/20',
+    progress: 'bg-blue-300',
+  },
+  adiba: {
+    panel: 'border-rose-300/35 bg-rose-500/10',
+    activePanel: 'border-rose-300/55 bg-rose-500/20 shadow-[0_0_24px_rgba(251,113,133,0.2)]',
+    label: 'text-rose-100/90',
+    value: 'text-rose-50',
+    accent: 'text-rose-200/90',
+    badge: 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/20',
+    progress: 'bg-rose-300',
+  },
+  external: {
+    panel: 'border-cyan-300/35 bg-cyan-500/10',
+    activePanel: 'border-cyan-300/55 bg-cyan-500/20 shadow-[0_0_24px_rgba(34,211,238,0.2)]',
+    label: 'text-cyan-100/90',
+    value: 'text-cyan-50',
+    accent: 'text-cyan-200/90',
+    badge: 'bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/20',
+    progress: 'bg-cyan-300',
+  },
+  human: {
+    panel: 'border-slate-300/25 bg-slate-500/10',
+    activePanel: 'border-slate-300/35 bg-slate-500/15',
+    label: 'text-slate-200/90',
+    value: 'text-slate-100',
+    accent: 'text-slate-200/80',
+    badge: 'bg-slate-500/20 text-slate-100 hover:bg-slate-500/20',
+    progress: 'bg-slate-300',
+  },
+};
+
+function getAgentIdentity(profile) {
+  if (!profile) return 'human';
+  if (profile.agentKey === 'megha') return 'megha';
+  if (profile.agentKey === 'adiba') return 'adiba';
+  if (profile.agentKey === 'external' || profile.type === 'external_ai') return 'external';
+
+  const normalizedName = String(profile.name ?? '').toLowerCase();
+  if (normalizedName.includes('megha')) return 'megha';
+  if (normalizedName.includes('adiba')) return 'adiba';
+  if (normalizedName.includes('online')) return 'external';
+
+  return profile.type === 'human' ? 'human' : 'external';
+}
+
+function getIdentityTheme(profile) {
+  return AGENT_IDENTITY_THEME[getAgentIdentity(profile)] ?? AGENT_IDENTITY_THEME.external;
+}
 
 // Toggle this to true when you want visual marker dots and piece outline during animation debugging.
 const SHOW_ANIMATION_DEBUG = false;
@@ -942,6 +999,8 @@ const GamePage = () => {
 
   const bluePlayer = players.blue ?? { name: 'Player 1', type: 'human' };
   const redPlayer = players.red ?? { name: 'Player 2', type: 'human' };
+  const blueIdentityTheme = getIdentityTheme(bluePlayer);
+  const redIdentityTheme = getIdentityTheme(redPlayer);
 
   const strategyKind = mode !== 'play' ? 'demo' : currentPlayerType;
   const isSingleAgentMode = gameMode === 'human-vs-adiba' || gameMode === 'human-vs-megha';
@@ -951,11 +1010,15 @@ const GamePage = () => {
   const onlineExternalProfile = players.red ?? { name: 'Online Agent', agentKey: 'external' };
   const onlineInternalDecision = agentDecisionsByColor.blue;
   const onlineExternalDecision = agentDecisionsByColor.red;
+  const onlineInternalTheme = getIdentityTheme(onlineInternalProfile);
+  const onlineExternalTheme = getIdentityTheme(onlineExternalProfile);
   const strategyAgentProfile = isSingleAgentMode
     ? (players.red?.agentKey ? players.red : players.blue)
     : strategyKind === 'internal_ai' || strategyKind === 'external_ai'
       ? currentPlayerProfile
       : null;
+  const strategyAgentTheme = strategyAgentProfile ? getIdentityTheme(strategyAgentProfile) : AGENT_IDENTITY_THEME.external;
+  const strategyAgentSide = strategyAgentProfile === players.red ? 'red' : 'blue';
 
   // Responsive container and layout
   return (
@@ -968,11 +1031,10 @@ const GamePage = () => {
               <h2 className="agent-vs-title cyber-heading mt-2 text-3xl text-white sm:text-4xl">Combatants Online</h2>
             </div>
 
-            <div className="flex items-center justify-center gap-4 sm:gap-8">
+            <div className="flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-8">
               <div className="flex flex-1 flex-col items-center gap-3 text-center">
                 <AgentPortrait profile={bluePlayer} side="blue" size="hero" loading="eager" />
                 <div>
-                  <p className="text-xs uppercase tracking-[0.26em] text-blue-200/75">Blue Side</p>
                   <p className="text-lg font-semibold text-slate-50 sm:text-xl">{bluePlayer.name}</p>
                 </div>
               </div>
@@ -987,7 +1049,6 @@ const GamePage = () => {
               <div className="flex flex-1 flex-col items-center gap-3 text-center">
                 <AgentPortrait profile={redPlayer} side="red" size="hero" loading="eager" />
                 <div>
-                  <p className="text-xs uppercase tracking-[0.26em] text-rose-200/75">Red Side</p>
                   <p className="text-lg font-semibold text-slate-50 sm:text-xl">{redPlayer.name}</p>
                 </div>
               </div>
@@ -997,40 +1058,39 @@ const GamePage = () => {
       )}
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/65 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-4 sm:py-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             <Button
               onClick={() => navigate(-1)}
               variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10"
+              className="h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-slate-100 hover:bg-white/10 sm:h-9"
             >
-              <ArrowLeft className="h-4 w-4" />
+              Back
             </Button>
-            <h1 className="cyber-heading text-lg font-semibold uppercase tracking-[0.22em] text-blue-100 md:text-xl">Checkers Arena</h1>
+            <h1 className="cyber-heading truncate text-base font-semibold uppercase tracking-[0.14em] text-blue-100 sm:text-lg sm:tracking-[0.22em] md:text-xl">Checkers Arena</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 sm:h-9 sm:w-9">
               <Settings className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 sm:h-9 sm:w-9">
               <CircleHelp className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-6 md:px-6 md:py-8">
+      <main className="mx-auto w-full max-w-7xl overflow-visible px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <section className="min-w-0 space-y-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
+          <section className="order-2 min-w-0 space-y-3 lg:order-1 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? blueIdentityTheme.activePanel : blueIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={bluePlayer} side="blue" size="md" />
                       <div>
-                        <p className="text-sm uppercase tracking-wide text-blue-200/80">{bluePlayer.name}</p>
+                        <p className={`text-sm uppercase tracking-wide ${blueIdentityTheme.label}`}>{bluePlayer.name}</p>
                         <p className="font-semibold text-white">{PLAYER_TYPE_LABEL[bluePlayer.type]}</p>
                       </div>
                     </div>
@@ -1039,23 +1099,23 @@ const GamePage = () => {
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
                       <p className="text-[10px] uppercase tracking-wide text-slate-400">Captures</p>
-                      <p className="text-xl font-bold text-blue-200">{captures.blue}</p>
+                      <p className={`text-xl font-bold ${blueIdentityTheme.value}`}>{captures.blue}</p>
                     </div>
                     <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
                       <p className="text-[10px] uppercase tracking-wide text-slate-400">Pieces</p>
-                      <p className="text-xl font-bold text-blue-200">{pieceCounts.blue}</p>
+                      <p className={`text-xl font-bold ${blueIdentityTheme.value}`}>{pieceCounts.blue}</p>
                     </div>
                   </div>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? 'border-rose-300/50 bg-rose-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? redIdentityTheme.activePanel : redIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={redPlayer} side="red" size="md" />
                       <div>
-                        <p className="text-sm uppercase tracking-wide text-rose-200/80">{redPlayer.name}</p>
+                        <p className={`text-sm uppercase tracking-wide ${redIdentityTheme.label}`}>{redPlayer.name}</p>
                         <p className="font-semibold text-white">{PLAYER_TYPE_LABEL[redPlayer.type]}</p>
                       </div>
                     </div>
@@ -1064,11 +1124,11 @@ const GamePage = () => {
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
                       <p className="text-[10px] uppercase tracking-wide text-slate-400">Captures</p>
-                      <p className="text-xl font-bold text-rose-200">{captures.red}</p>
+                      <p className={`text-xl font-bold ${redIdentityTheme.value}`}>{captures.red}</p>
                     </div>
                     <div className="rounded-lg border border-white/10 bg-slate-950/40 p-2">
                       <p className="text-[10px] uppercase tracking-wide text-slate-400">Pieces</p>
-                      <p className="text-xl font-bold text-rose-200">{pieceCounts.red}</p>
+                      <p className={`text-xl font-bold ${redIdentityTheme.value}`}>{pieceCounts.red}</p>
                     </div>
                   </div>
                 </div>
@@ -1094,15 +1154,6 @@ const GamePage = () => {
 
             <Card className="rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
               <CardContent className="space-y-3 p-4">
-                <Button
-                  onClick={handleNewGame}
-                  disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating}
-                  className="h-11 w-full rounded-xl font-semibold"
-                >
-                  {(loading || isFetchingAgentMove) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  New Game
-                </Button>
-
                 {mode === 'play' && hasAiPlayersInMatch && (
                   <div className="CyberPanel flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
                     <div>
@@ -1154,12 +1205,12 @@ const GamePage = () => {
             </Card>
           </section>
 
-          <section className="flex min-w-0 flex-col items-center justify-center space-y-4 overflow-hidden lg:col-span-6">
+          <section className="order-1 flex min-w-0 flex-col items-center justify-center space-y-4 overflow-visible lg:order-2 lg:col-span-6">
             {mode === 'demo' && (
               <Card className="w-full rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
                 <CardContent className="space-y-3 p-4">
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-4 rounded-xl bg-slate-950/50">
+                    <TabsList className="grid w-full grid-cols-2 rounded-xl bg-slate-950/50 sm:grid-cols-4">
                       {['initial', 'midgame', 'endgame', 'another'].map((tab) => (
                         <TabsTrigger
                           key={tab}
@@ -1227,16 +1278,9 @@ const GamePage = () => {
               )}
             </div>
 
-            <div className="CyberPanel mx-auto flex w-full items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-5 py-3">
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Turn</span>
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-                <span className={`h-2.5 w-2.5 rounded-full ${currentPlayer === 'blue' ? 'bg-blue-300' : 'bg-rose-300'} ${mode === 'play' && !winner ? 'animate-pulse' : ''}`} />
-                {currentPlayerProfile.name}
-              </div>
-            </div>
           </section>
 
-          <section className="min-w-0 space-y-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
+          <section className="order-3 min-w-0 space-y-3 lg:order-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="w-full rounded-2xl border border-white/10 bg-slate-900/55 backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-center justify-between">
@@ -1287,51 +1331,51 @@ const GamePage = () => {
                       {strategyAgentProfile && (
                         <AgentPortrait
                           profile={strategyAgentProfile}
-                          side={strategyAgentProfile === players.red ? 'red' : 'blue'}
+                          side={strategyAgentSide}
                           size="sm"
                         />
                       )}
                       <div>
-                        <h3 className="text-lg font-semibold text-cyan-100">Strategy Panel</h3>
-                        <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/70">
+                        <h3 className={`text-lg font-semibold ${strategyAgentTheme.value}`}>Strategy Panel</h3>
+                        <p className={`text-xs uppercase tracking-[0.2em] ${strategyAgentTheme.accent}`}>
                           {strategyAgentProfile ? strategyAgentProfile.name : 'Live match telemetry'}
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/15">Live</Badge>
+                    <Badge className={strategyAgentTheme.badge}>Live</Badge>
                   </div>
 
                   {isSingleAgentMode && (
                     <>
-                      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
-                        <AgentPortrait profile={strategyAgentProfile} side="red" size="sm" />
+                      <div className={`flex items-center gap-3 rounded-xl border bg-slate-950/45 px-3 py-2 ${strategyAgentTheme.panel}`}>
+                        <AgentPortrait profile={strategyAgentProfile} side={strategyAgentSide} size="sm" />
                         <div>
-                          <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/60">Active Analyst</p>
+                          <p className={`text-xs uppercase tracking-[0.18em] ${strategyAgentTheme.accent}`}>Active Analyst</p>
                           <p className="font-semibold text-slate-50">{singleAgentLabel}</p>
                         </div>
                       </div>
                       <div className="space-y-1.5 text-sm">
-                        <p className="text-cyan-100/80">Chosen Move</p>
+                        <p className={strategyAgentTheme.accent}>Chosen Move</p>
                         <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-slate-100">
                           {lastAgentDecision?.move_text ?? `Waiting for ${singleAgentLabel} turn...`}
                         </p>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
-                          <p className="text-cyan-100/80">Win Probability</p>
-                          <p className="font-semibold text-cyan-100">
+                          <p className={strategyAgentTheme.accent}>Win Probability</p>
+                          <p className={`font-semibold ${strategyAgentTheme.value}`}>
                             {typeof lastAgentDecision?.win_probability === 'number' ? `${Math.round(lastAgentDecision.win_probability * 100)}%` : '—'}
                           </p>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
                           <div
-                            className="h-full rounded-full bg-cyan-300 transition-all duration-500"
+                            className={`h-full rounded-full transition-all duration-500 ${strategyAgentTheme.progress}`}
                             style={{ width: `${Math.max(0, Math.min(100, Math.round((lastAgentDecision?.win_probability ?? 0) * 100)))}%` }}
                           />
                         </div>
                       </div>
                       <div className="space-y-1.5 text-sm">
-                        <p className="text-cyan-100/80">Explanation</p>
+                        <p className={strategyAgentTheme.accent}>Explanation</p>
                         <div className="h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-slate-100/95">
                           {lastAgentDecision?.explanation ?? `${singleAgentLabel} will explain each move once a decision is made.`}
                         </div>
@@ -1347,52 +1391,48 @@ const GamePage = () => {
                       {['blue', 'red'].map((side) => {
                         const sideDecision = agentDecisionsByColor[side];
                         const sideProfile = players[side] ?? { name: side === 'blue' ? 'Blue Agent' : 'Red Agent' };
-                        const isBlueSide = side === 'blue';
-                        const containerClass = isBlueSide
-                          ? 'border-blue-300/35 bg-blue-500/10'
-                          : 'border-rose-300/35 bg-rose-500/10';
-                        const labelClass = isBlueSide ? 'text-blue-100/90' : 'text-rose-100/90';
-                        const valueClass = isBlueSide ? 'text-blue-50' : 'text-rose-50';
-                        const accentClass = isBlueSide ? 'text-blue-200/90' : 'text-rose-200/90';
+                        const identityTheme = getIdentityTheme(sideProfile);
                         return (
-                          <div key={side} className={`rounded-lg border px-3 py-2 ${containerClass}`}>
+                          <div key={side} className={`rounded-lg border px-3 py-2 ${identityTheme.panel}`}>
                             <div className="mb-1 flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2">
                                 <AgentPortrait profile={sideProfile} side={side} size="xs" />
-                                <p className={`text-xs uppercase tracking-wide ${labelClass}`}>{sideProfile.name} ({side})</p>
+                                <div>
+                                  <p className={`text-xs uppercase tracking-wide ${identityTheme.label}`}>{sideProfile.name} ({side})</p>
+                                </div>
                               </div>
-                              <Badge className={isBlueSide ? 'bg-blue-500/20 text-blue-100 hover:bg-blue-500/20' : 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/20'}>
+                              <Badge className={identityTheme.badge}>
                                 {sideProfile?.agentKey === 'megha' ? 'Alpha-Beta' : 'MCTS + Fuzzy'}
                               </Badge>
                             </div>
                             <div className="mt-2 space-y-1.5 text-sm">
-                              <p className={accentClass}>Chosen Move</p>
-                              <p className={`rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium ${valueClass}`}>
+                              <p className={identityTheme.accent}>Chosen Move</p>
+                              <p className={`rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium ${identityTheme.value}`}>
                                 {sideDecision?.move_text ?? 'Waiting for move...'}
                               </p>
                             </div>
                             <div className="mt-2 space-y-1.5 text-sm">
                               <div className="flex items-center justify-between">
-                                <p className={accentClass}>Win Probability</p>
-                                <p className={`font-semibold ${valueClass}`}>
+                                <p className={identityTheme.accent}>Win Probability</p>
+                                <p className={`font-semibold ${identityTheme.value}`}>
                                   {typeof sideDecision?.win_probability === 'number' ? `${Math.round(sideDecision.win_probability * 100)}%` : '—'}
                                 </p>
                               </div>
                               <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
                                 <div
-                                  className={`h-full rounded-full transition-all duration-500 ${isBlueSide ? 'bg-blue-300' : 'bg-rose-300'}`}
+                                  className={`h-full rounded-full transition-all duration-500 ${identityTheme.progress}`}
                                   style={{ width: `${Math.max(0, Math.min(100, Math.round((sideDecision?.win_probability ?? 0) * 100)))}%` }}
                                 />
                               </div>
                             </div>
                             <div className="mt-2 space-y-1.5 text-sm">
-                              <p className={accentClass}>Explanation</p>
-                              <div className={`h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed ${valueClass}`}>
+                              <p className={identityTheme.accent}>Explanation</p>
+                              <div className={`h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed ${identityTheme.value}`}>
                                 {sideDecision?.explanation ?? 'No explanation yet.'}
                               </div>
                             </div>
                             {typeof sideDecision?.searched_depth === 'number' && (
-                              <p className={`mt-1 text-xs ${accentClass}`}>Depth: {sideDecision.searched_depth}</p>
+                              <p className={`mt-1 text-xs ${identityTheme.accent}`}>Depth: {sideDecision.searched_depth}</p>
                             )}
                           </div>
                         );
@@ -1402,62 +1442,62 @@ const GamePage = () => {
 
                   {gameMode === 'online-benchmark' && (
                     <div className="space-y-3">
-                      <div className="rounded-lg border border-rose-300/35 bg-rose-500/10 px-3 py-2">
+                      <div className={`rounded-lg border px-3 py-2 ${onlineExternalTheme.panel}`}>
                         <div className="mb-1 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <AgentPortrait profile={onlineExternalProfile} side="red" size="xs" />
-                            <p className="text-xs uppercase tracking-wide text-rose-100/90">Online Agent Context</p>
+                            <p className={`text-xs uppercase tracking-wide ${onlineExternalTheme.label}`}>Online Agent Context</p>
                           </div>
-                          <Badge className="bg-rose-500/20 text-rose-100 hover:bg-rose-500/20">
+                          <Badge className={onlineExternalTheme.badge}>
                             {onlineExternalProfile.name}
                           </Badge>
                         </div>
                         <div className="mt-2 space-y-1.5 text-sm">
-                          <p className="text-rose-200/90">Chosen Move</p>
-                          <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-rose-50">
+                          <p className={onlineExternalTheme.accent}>Chosen Move</p>
+                          <p className={`rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium ${onlineExternalTheme.value}`}>
                             {onlineExternalDecision?.move_text ?? 'Waiting for online agent move...'}
                           </p>
                         </div>
                       </div>
 
-                      <div className="rounded-lg border border-blue-300/35 bg-blue-500/10 px-3 py-2">
+                      <div className={`rounded-lg border px-3 py-2 ${onlineInternalTheme.panel}`}>
                         <div className="mb-1 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <AgentPortrait profile={onlineInternalProfile} side="blue" size="xs" />
-                            <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
+                            <p className={`text-xs uppercase tracking-wide ${onlineInternalTheme.label}`}>Internal Agent Context</p>
                           </div>
-                          <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">
+                          <Badge className={onlineInternalTheme.badge}>
                             {onlineInternalProfile.name}
                           </Badge>
                         </div>
                         <div className="mt-2 space-y-1.5 text-sm">
-                          <p className="text-blue-200/90">Chosen Move</p>
-                          <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-blue-50">
+                          <p className={onlineInternalTheme.accent}>Chosen Move</p>
+                          <p className={`rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium ${onlineInternalTheme.value}`}>
                             {onlineInternalDecision?.move_text ?? 'Waiting for internal agent move...'}
                           </p>
                         </div>
                         <div className="mt-2 space-y-1.5 text-sm">
                           <div className="flex items-center justify-between">
-                            <p className="text-blue-200/90">Win Probability</p>
-                            <p className="font-semibold text-blue-50">
+                            <p className={onlineInternalTheme.accent}>Win Probability</p>
+                            <p className={`font-semibold ${onlineInternalTheme.value}`}>
                               {typeof onlineInternalDecision?.win_probability === 'number' ? `${Math.round(onlineInternalDecision.win_probability * 100)}%` : '—'}
                             </p>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-slate-950/65">
                             <div
-                              className="h-full rounded-full bg-blue-300 transition-all duration-500"
+                              className={`h-full rounded-full transition-all duration-500 ${onlineInternalTheme.progress}`}
                               style={{ width: `${Math.max(0, Math.min(100, Math.round((onlineInternalDecision?.win_probability ?? 0) * 100)))}%` }}
                             />
                           </div>
                         </div>
                         <div className="mt-2 space-y-1.5 text-sm">
-                          <p className="text-blue-200/90">Explanation</p>
-                          <div className="h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed text-blue-50">
+                          <p className={onlineInternalTheme.accent}>Explanation</p>
+                          <div className={`h-24 overflow-y-auto rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 leading-relaxed ${onlineInternalTheme.value}`}>
                             {onlineInternalDecision?.explanation ?? `${onlineInternalProfile.name} context will appear after its first move.`}
                           </div>
                         </div>
                         {typeof onlineInternalDecision?.searched_depth === 'number' && (
-                          <p className="mt-1 text-xs text-blue-200/90">Depth: {onlineInternalDecision.searched_depth}</p>
+                          <p className={`mt-1 text-xs ${onlineInternalTheme.accent}`}>Depth: {onlineInternalDecision.searched_depth}</p>
                         )}
                       </div>
                     </div>
@@ -1516,17 +1556,6 @@ const GamePage = () => {
           </section>
         </div>
 
-        <Card className="mt-6 rounded-2xl border border-white/10 bg-slate-900/45 backdrop-blur-xl">
-          <CardContent className="p-4 text-sm text-slate-300">
-            {mode === 'demo'
-              ? 'Demo mode is active. Pick a board snapshot or press Play Game to start a match.'
-              : isCurrentTurnHuman
-                ? 'Click a piece, then click a highlighted square. Captures are mandatory and multi-jumps complete in one turn.'
-                : autoPlayEnabled
-                  ? `${currentPlayerProfile.name} will move automatically while Auto Play is ON.`
-                  : `Press ${currentTurnActionLabel} to execute the current AI move.`}
-          </CardContent>
-        </Card>
       </main>
 
       {showResignModal && (

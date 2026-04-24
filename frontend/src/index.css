@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap");
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 @theme {
   --color-background: oklch(100% 0 0);
   --color-foreground: oklch(9% 0.03 285);
@@ -167,6 +175,37 @@
   box-shadow:
     0 0 10px rgba(0, 200, 255, 0.6),
     0 0 25px rgba(122, 92, 255, 0.5) !important;
+}
+
+.app-action-button {
+  height: 2.75rem;
+  min-width: min(14rem, 86vw);
+  width: auto;
+  border-radius: 0.85rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(0, 200, 255, 0.32) !important;
+  background: linear-gradient(135deg, #00c6ff, #7a5cff) !important;
+  color: rgba(255, 255, 255, 0.98) !important;
+  box-shadow:
+    0 0 10px rgba(0, 200, 255, 0.58),
+    0 0 24px rgba(122, 92, 255, 0.48) !important;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.app-action-button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 16px rgba(0, 200, 255, 0.76),
+    0 0 30px rgba(122, 92, 255, 0.6) !important;
+}
+
+.app-action-button:disabled {
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none !important;
 }
 
 .CyberButton--secondary {
@@ -377,6 +416,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
   padding: 1.5rem;
   background:
     radial-gradient(circle at center, rgba(8, 18, 38, 0.58), rgba(2, 6, 23, 0.88)),
@@ -403,6 +443,303 @@
   animation: cyberVsFadeIn 720ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Tournament lobby cinematic VS flow */
+.vs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background:
+    radial-gradient(72% 82% at 50% 50%, rgba(8, 20, 48, 0.55), rgba(2, 7, 26, 0.9)),
+    rgba(1, 6, 18, 0.78);
+  backdrop-filter: blur(15px);
+}
+
+.vs-card {
+  width: min(100%, 60rem);
+  border-radius: 1.6rem;
+  border: 1px solid rgba(145, 226, 255, 0.28);
+  padding: 1.2rem 0.95rem 1.4rem;
+  background:
+    radial-gradient(circle at 5% 0%, rgba(56, 189, 248, 0.16), transparent 44%),
+    radial-gradient(circle at 95% 0%, rgba(251, 113, 133, 0.15), transparent 44%),
+    linear-gradient(165deg, rgba(5, 13, 29, 0.96), rgba(5, 10, 22, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(173, 234, 255, 0.18),
+    0 0 26px rgba(56, 189, 248, 0.2),
+    0 24px 48px rgba(2, 8, 22, 0.62);
+}
+
+.vs-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.vs-player--left {
+  animation: vsSlideLeft 1200ms cubic-bezier(0.18, 0.88, 0.22, 1) both;
+}
+
+.vs-player--right {
+  animation: vsSlideRight 1200ms cubic-bezier(0.18, 0.88, 0.22, 1) both;
+}
+
+.vs-player-card {
+  min-width: 11.5rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 0.9rem 0.9rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.56), rgba(9, 14, 30, 0.5));
+}
+
+@media (min-width: 640px) {
+  .vs-overlay {
+    padding: 1.5rem;
+  }
+
+  .vs-card {
+    padding: 1.6rem 1.2rem 2rem;
+  }
+}
+
+.vs-player-card--blue {
+  border-color: rgba(96, 198, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(190, 236, 255, 0.14),
+    0 0 0 1px rgba(56, 189, 248, 0.12),
+    0 0 24px rgba(56, 189, 248, 0.22);
+}
+
+.vs-player-card--red {
+  border-color: rgba(251, 113, 133, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 208, 220, 0.14),
+    0 0 0 1px rgba(251, 113, 133, 0.12),
+    0 0 24px rgba(251, 113, 133, 0.22);
+}
+
+.vs-player--left .agent-portrait {
+  box-shadow:
+    inset 0 1px 0 rgba(193, 237, 255, 0.24),
+    0 0 26px rgba(56, 189, 248, 0.62),
+    0 0 56px rgba(56, 189, 248, 0.3);
+  animation: vsPulseBlue 1300ms ease-in-out infinite alternate;
+}
+
+.vs-player--right .agent-portrait {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 197, 225, 0.24),
+    0 0 26px rgba(251, 113, 133, 0.62),
+    0 0 56px rgba(251, 113, 133, 0.28);
+  animation: vsPulseRed 1300ms ease-in-out infinite alternate;
+}
+
+.vs-heading,
+.vs-subheading,
+.vs-text {
+  animation: vsTextFade 1150ms ease both;
+}
+
+.vs-selection-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.15rem;
+  justify-items: center;
+}
+
+@media (min-width: 640px) {
+  .vs-selection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 34rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.vs-agent-select {
+  min-width: 13rem;
+  width: 100%;
+  max-width: 16rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  padding: 1rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(160deg, rgba(12, 22, 42, 0.58), rgba(7, 12, 28, 0.5));
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, opacity 220ms ease, filter 220ms ease;
+}
+
+.vs-agent-select--blue {
+  border-color: rgba(96, 198, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(190, 236, 255, 0.13),
+    0 0 0 1px rgba(56, 189, 248, 0.1),
+    0 0 20px rgba(56, 189, 248, 0.16);
+}
+
+.vs-agent-select--red {
+  border-color: rgba(251, 113, 133, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 208, 220, 0.12),
+    0 0 0 1px rgba(251, 113, 133, 0.1),
+    0 0 20px rgba(251, 113, 133, 0.16);
+}
+
+.vs-agent-select:hover {
+  transform: translateY(-2px);
+}
+
+.vs-agent-select.is-selected {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.vs-agent-select--blue.is-selected {
+  border-color: rgba(125, 211, 252, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(197, 239, 255, 0.2),
+    0 0 0 1px rgba(96, 198, 255, 0.5),
+    0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+.vs-agent-select--red.is-selected {
+  border-color: rgba(251, 146, 165, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 214, 226, 0.2),
+    0 0 0 1px rgba(251, 113, 133, 0.5),
+    0 0 30px rgba(251, 113, 133, 0.4);
+}
+
+.vs-agent-select.is-dimmed {
+  opacity: 0.55;
+  filter: saturate(0.8);
+}
+
+.vs-agent-name {
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.vs-agent-algo,
+.vs-algo-label {
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  opacity: 0.74;
+}
+
+.vs-algo-label {
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .agent-vs-overlay {
+    align-items: flex-start;
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+  }
+
+  .vs-overlay {
+    align-items: flex-start;
+    padding-top: 1.1rem;
+    padding-bottom: 1.1rem;
+  }
+
+  .vs-player--left,
+  .vs-player--right {
+    animation-duration: 600ms;
+  }
+
+  .vs-heading,
+  .vs-subheading,
+  .vs-text {
+    animation-duration: 520ms;
+  }
+
+  .cyber-heading {
+    letter-spacing: 0.6px;
+  }
+}
+
+@keyframes vsSlideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-108px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes vsSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(108px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes vsTextFade {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vsPulseBlue {
+  from {
+    filter: brightness(0.98);
+    box-shadow:
+      inset 0 1px 0 rgba(193, 237, 255, 0.22),
+      0 0 20px rgba(56, 189, 248, 0.56),
+      0 0 44px rgba(56, 189, 248, 0.24);
+  }
+  to {
+    filter: brightness(1.08);
+    box-shadow:
+      inset 0 1px 0 rgba(193, 237, 255, 0.22),
+      0 0 30px rgba(56, 189, 248, 0.75),
+      0 0 64px rgba(56, 189, 248, 0.38);
+  }
+}
+
+@keyframes vsPulseRed {
+  from {
+    filter: brightness(0.98);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 197, 225, 0.22),
+      0 0 20px rgba(251, 113, 133, 0.56),
+      0 0 44px rgba(251, 113, 133, 0.24);
+  }
+  to {
+    filter: brightness(1.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 197, 225, 0.22),
+      0 0 30px rgba(251, 113, 133, 0.74),
+      0 0 64px rgba(251, 113, 133, 0.38);
+  }
+}
+
 @keyframes cyberVsFadeIn {
   from {
     opacity: 0;
@@ -417,7 +754,16 @@
 @media (prefers-reduced-motion: reduce) {
   .agent-portrait--interactive,
   .agent-vs-card,
-  .agent-vs-title {
+  .agent-vs-title,
+  .vs-player--left,
+  .vs-player--right,
+  .vs-player-card,
+  .vs-heading,
+  .vs-subheading,
+  .vs-text,
+  .vs-player--left .agent-portrait,
+  .vs-player--right .agent-portrait,
+  .vs-agent-select {
     transition: none !important;
     animation: none !important;
   }

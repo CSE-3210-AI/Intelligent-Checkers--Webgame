@@ -1,25 +1,71 @@
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Bot, ArrowLeft, Swords, Brain } from 'lucide-react';
+import { Bot, Swords, Brain } from 'lucide-react';
 import AgentPortrait from '../components/AgentPortrait';
+import VSScreen from '../components/VSScreen';
 
 export default function TournamentModeSelection() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const vs = searchParams.get('vs');
+
+  const vsConfig = useMemo(() => {
+    if (vs === 'internal') return { mode: 'internal', initialAgent: 'adiba' };
+    if (vs === 'online') return { mode: 'online', initialAgent: null };
+    if (vs === 'human') return { mode: 'human', initialAgent: null };
+    if (vs === 'human-megha') return { mode: 'human', initialAgent: 'megha' };
+    if (vs === 'human-adiba') return { mode: 'human', initialAgent: 'adiba' };
+    return null;
+  }, [vs]);
+
+  const openVs = (nextVs) => {
+    navigate({
+      pathname: '/tournaments',
+      search: `?vs=${nextVs}`,
+    });
+  };
+
+  const closeVs = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate('/tournaments', { replace: true });
+  };
+
+  const handleVsStart = (selectedAgent) => {
+    if (!vsConfig) return;
+
+    if (vsConfig.mode === 'internal') {
+      navigate('/game?mode=internal-tournament');
+      return;
+    }
+
+    if (vsConfig.mode === 'online') {
+      navigate(`/game?mode=online-benchmark&internalAgent=${selectedAgent}`);
+      return;
+    }
+
+    const humanRoute = selectedAgent === 'megha' ? '/game?mode=agent-megha' : '/game?mode=agent-adiba';
+    navigate(humanRoute);
+  };
+
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-12 text-slate-100">
+    <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-10 text-slate-100 sm:py-12">
       <button
         type="button"
         aria-label="Go back"
-        className="CyberButton CyberButton--secondary absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
+        className="CyberButton CyberButton--secondary absolute left-4 top-4 flex h-11 items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10 sm:left-8 sm:top-8"
         onClick={() => navigate(-1)}
       >
-        <ArrowLeft className="w-4 h-4" /> Back
+        Back
       </button>
-      <h1 className="cyber-heading text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-blue-100 via-cyan-200 to-blue-100 bg-clip-text text-transparent">
+      <h1 className="cyber-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 sm:mb-10 bg-linear-to-r from-blue-100 via-cyan-200 to-blue-100 bg-clip-text text-transparent">
         Tournament Mode Selection
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-7xl mb-8 sm:mb-12">
 
         {/* Human vs Human */}
         <Card
@@ -46,7 +92,7 @@ export default function TournamentModeSelection() {
         {/* Internal AI Tournament */}
         <Card
           className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-blue-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-blue-300/65"
-          onClick={() => navigate('/tournament/internal')}
+          onClick={() => openVs('internal')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 flex items-center gap-3">
@@ -72,7 +118,7 @@ export default function TournamentModeSelection() {
         {/* Online Benchmark Tournament */}
         <Card
           className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-slate-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-slate-300/65"
-          onClick={() => navigate('/tournament/online')}
+          onClick={() => openVs('online')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 flex items-center gap-3">
@@ -95,57 +141,42 @@ export default function TournamentModeSelection() {
           </CardContent>
         </Card>
 
-        {/* Human vs Agent Adiba */}
+        {/* Human vs Agent */}
         <Card
           className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-cyan-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-cyan-300/65"
-          onClick={() => navigate('/game?mode=agent-adiba')}
+          onClick={() => openVs('human')}
         >
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 flex items-center justify-center gap-3">
+              <AgentPortrait profile={{ name: 'Agent Megha', agentKey: 'megha', type: 'internal_ai' }} side="blue" size="lg" />
               <AgentPortrait profile={{ name: 'Agent Adiba', agentKey: 'adiba', type: 'adiba' }} side="red" size="lg" />
               <div className="rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-3 shadow-lg">
                 <Brain className="w-6 h-6 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-slate-100">Human vs Agent Adiba</CardTitle>
+            <CardTitle className="text-2xl text-slate-100">Human vs Agent</CardTitle>
             <CardDescription className="text-base mt-2 text-slate-300">
-              Play against Agent Adiba, our adaptive AI powered by Monte Carlo Tree Search and Fuzzy Logic. The AI will explain its strategy and reasoning.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">MCTS + Fuzzy</Button>
-              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Explainable AI</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Human vs Agent Megha */}
-        <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-blue-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-blue-300/65"
-          onClick={() => navigate('/game?mode=agent-megha')}
-        >
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 flex items-center justify-center gap-3">
-              <AgentPortrait profile={{ name: 'Agent Megha', agentKey: 'megha', type: 'internal_ai' }} side="blue" size="lg" />
-              <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
-                <Bot className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-slate-100">Human vs Agent Megha</CardTitle>
-            <CardDescription className="text-base mt-2 text-slate-300">
-              Play against Agent Megha, a strong Alpha-Beta agent with iterative deepening and tactical move ordering.
+              Challenge one of our internal agents and choose your opponent before entering the match.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Alpha-Beta</Button>
-              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">Iterative Deepening</Button>
+              <Button variant="secondary" className="text-xs border border-white/20 bg-white/10 text-slate-100 hover:bg-white/20">MCTS + Fuzzy</Button>
             </div>
           </CardContent>
         </Card>
 
       </div>
+
+      {vsConfig && (
+        <VSScreen
+          mode={vsConfig.mode}
+          initialAgent={vsConfig.initialAgent}
+          onClose={closeVs}
+          onStart={handleVsStart}
+        />
+      )}
     </div>
   );
 }

@@ -4,11 +4,11 @@ import { AGENT_CARD_COPY } from '../lib/agentCards';
 
 export default function MeetAgents() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
-      <h1 className="cyber-heading text-4xl md:text-5xl font-extrabold text-center mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10 sm:py-12">
+      <h1 className="cyber-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 sm:mb-10 bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
         Meet the Agents
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 w-full max-w-4xl mb-8 sm:mb-12">
         {/* Agent Megha */}
         <div className="cyber-card cyber-agent-card cyber-agent-card--megha rounded-xl p-8 flex flex-col items-center border-2 border-blue-200">
           <AgentPortrait profile={{ ...AGENT_CARD_COPY.megha, agentKey: 'megha', type: 'internal_ai' }} side="blue" size="xl" className="mb-4" />
@@ -30,7 +30,7 @@ export default function MeetAgents() {
           <p className="text-slate-300 text-center text-base">{AGENT_CARD_COPY.adiba.summary}</p>
         </div>
       </div>
-      <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-10 py-4 text-lg shadow-lg hover:shadow-xl transition-all">
+      <Button size="lg" className="app-action-button">
         Start Match
       </Button>
     </div>

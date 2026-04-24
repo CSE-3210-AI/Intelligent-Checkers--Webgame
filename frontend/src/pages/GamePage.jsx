@@ -6,8 +6,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Bot, CircleHelp, Loader2, Settings, Users } from 'lucide-react';
+import { ArrowLeft, CircleHelp, Loader2, Settings } from 'lucide-react';
 
+import AgentPortrait from '../components/AgentPortrait';
 import Board from '../components/Board';
 import InitialBoard from '../components/InitialBoard';
 import MidGameBoard from '../components/MidGameBoard';
@@ -180,6 +181,7 @@ const GamePage = () => {
   const [showLastMove, setShowLastMove] = useState(false);
   const [showPreviousBoard, setShowPreviousBoard] = useState(false);
   const [showResignModal, setShowResignModal] = useState(false);
+  const [showVsSplash, setShowVsSplash] = useState(false);
 
   const [loading,  setLoading]  = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -220,6 +222,16 @@ const GamePage = () => {
     pendingCommitRef.current = pendingCommit;
   }, [pendingCommit]);
 
+  useEffect(() => {
+    if (!showVsSplash) return undefined;
+
+    const timeoutId = setTimeout(() => {
+      setShowVsSplash(false);
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, [showVsSplash]);
+
   const timerText = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
 
   const boardToRender =
@@ -253,6 +265,7 @@ const GamePage = () => {
     isPreCaptureAnimating ||
     isMoveAnimating ||
     isCaptureAnimating ||
+    showVsSplash ||
     isShowingPreviousBoard;
 
   const currentTurnActionLabel = isCurrentTurnHuman ? 'Player Turn' : `${currentPlayerProfile.name} Turn`;
@@ -682,6 +695,7 @@ const GamePage = () => {
       setLastAgentDecision(null);
       setAgentDecisionsByColor({ blue: null, red: null });
       setMode('play');
+      setShowVsSplash(Boolean(playerConfig.blue?.agentKey || playerConfig.red?.agentKey));
       setStartTime(Date.now());
       setElapsed(0);
       const nextType = playerConfig[data.currentPlayer]?.type ?? 'human';
@@ -761,6 +775,7 @@ const GamePage = () => {
 
   const handleShowDemo = () => {
     setMode('demo');
+    setShowVsSplash(false);
     setSelected(null);
     setHighlights([]);
   };
@@ -936,10 +951,51 @@ const GamePage = () => {
   const onlineExternalProfile = players.red ?? { name: 'Online Agent', agentKey: 'external' };
   const onlineInternalDecision = agentDecisionsByColor.blue;
   const onlineExternalDecision = agentDecisionsByColor.red;
+  const strategyAgentProfile = isSingleAgentMode
+    ? (players.red?.agentKey ? players.red : players.blue)
+    : strategyKind === 'internal_ai' || strategyKind === 'external_ai'
+      ? currentPlayerProfile
+      : null;
 
   // Responsive container and layout
   return (
     <div className="cyber-game-ui min-h-screen text-slate-100">
+      {mode === 'play' && showVsSplash && (
+        <div className="agent-vs-overlay">
+          <div className="agent-vs-card">
+            <div className="mb-4 text-center">
+              <p className="text-xs uppercase tracking-[0.38em] text-cyan-100/65">Match Sync</p>
+              <h2 className="agent-vs-title cyber-heading mt-2 text-3xl text-white sm:text-4xl">Combatants Online</h2>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 sm:gap-8">
+              <div className="flex flex-1 flex-col items-center gap-3 text-center">
+                <AgentPortrait profile={bluePlayer} side="blue" size="hero" loading="eager" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.26em] text-blue-200/75">Blue Side</p>
+                  <p className="text-lg font-semibold text-slate-50 sm:text-xl">{bluePlayer.name}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs uppercase tracking-[0.38em] text-slate-400">Arena Link</span>
+                <div className="rounded-full border border-cyan-300/35 bg-slate-950/70 px-5 py-3 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
+                  <span className="cyber-heading text-2xl text-cyan-100 sm:text-3xl">VS</span>
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-col items-center gap-3 text-center">
+                <AgentPortrait profile={redPlayer} side="red" size="hero" loading="eager" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.26em] text-rose-200/75">Red Side</p>
+                  <p className="text-lg font-semibold text-slate-50 sm:text-xl">{redPlayer.name}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/65 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
           <div className="flex items-center gap-4">
@@ -972,9 +1028,7 @@ const GamePage = () => {
                 <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/25 text-blue-200">
-                        {bluePlayer.type === 'human' ? <Users className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
-                      </div>
+                      <AgentPortrait profile={bluePlayer} side="blue" size="md" />
                       <div>
                         <p className="text-sm uppercase tracking-wide text-blue-200/80">{bluePlayer.name}</p>
                         <p className="font-semibold text-white">{PLAYER_TYPE_LABEL[bluePlayer.type]}</p>
@@ -999,9 +1053,7 @@ const GamePage = () => {
                 <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? 'border-rose-300/50 bg-rose-500/20' : 'border-white/10 bg-slate-900/60'}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/25 text-rose-200">
-                        {redPlayer.type === 'human' ? <Users className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
-                      </div>
+                      <AgentPortrait profile={redPlayer} side="red" size="md" />
                       <div>
                         <p className="text-sm uppercase tracking-wide text-rose-200/80">{redPlayer.name}</p>
                         <p className="font-semibold text-white">{PLAYER_TYPE_LABEL[redPlayer.type]}</p>
@@ -1230,10 +1282,34 @@ const GamePage = () => {
             {mode === 'play' && (
               <Card className="w-full rounded-2xl border border-cyan-300/40 bg-cyan-500/10 backdrop-blur-xl">
                 <CardContent className="space-y-4 p-4">
-                  <h3 className="text-lg font-semibold text-cyan-100">Strategy Panel</h3>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      {strategyAgentProfile && (
+                        <AgentPortrait
+                          profile={strategyAgentProfile}
+                          side={strategyAgentProfile === players.red ? 'red' : 'blue'}
+                          size="sm"
+                        />
+                      )}
+                      <div>
+                        <h3 className="text-lg font-semibold text-cyan-100">Strategy Panel</h3>
+                        <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/70">
+                          {strategyAgentProfile ? strategyAgentProfile.name : 'Live match telemetry'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/15">Live</Badge>
+                  </div>
 
                   {isSingleAgentMode && (
                     <>
+                      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
+                        <AgentPortrait profile={strategyAgentProfile} side="red" size="sm" />
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/60">Active Analyst</p>
+                          <p className="font-semibold text-slate-50">{singleAgentLabel}</p>
+                        </div>
+                      </div>
                       <div className="space-y-1.5 text-sm">
                         <p className="text-cyan-100/80">Chosen Move</p>
                         <p className="rounded-lg border border-white/10 bg-slate-950/45 px-3 py-2 font-medium text-slate-100">
@@ -1281,7 +1357,10 @@ const GamePage = () => {
                         return (
                           <div key={side} className={`rounded-lg border px-3 py-2 ${containerClass}`}>
                             <div className="mb-1 flex items-center justify-between gap-2">
-                              <p className={`text-xs uppercase tracking-wide ${labelClass}`}>{sideProfile.name} ({side})</p>
+                              <div className="flex items-center gap-2">
+                                <AgentPortrait profile={sideProfile} side={side} size="xs" />
+                                <p className={`text-xs uppercase tracking-wide ${labelClass}`}>{sideProfile.name} ({side})</p>
+                              </div>
                               <Badge className={isBlueSide ? 'bg-blue-500/20 text-blue-100 hover:bg-blue-500/20' : 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/20'}>
                                 {sideProfile?.agentKey === 'megha' ? 'Alpha-Beta' : 'MCTS + Fuzzy'}
                               </Badge>
@@ -1325,7 +1404,10 @@ const GamePage = () => {
                     <div className="space-y-3">
                       <div className="rounded-lg border border-rose-300/35 bg-rose-500/10 px-3 py-2">
                         <div className="mb-1 flex items-center justify-between gap-2">
-                          <p className="text-xs uppercase tracking-wide text-rose-100/90">Online Agent Context</p>
+                          <div className="flex items-center gap-2">
+                            <AgentPortrait profile={onlineExternalProfile} side="red" size="xs" />
+                            <p className="text-xs uppercase tracking-wide text-rose-100/90">Online Agent Context</p>
+                          </div>
                           <Badge className="bg-rose-500/20 text-rose-100 hover:bg-rose-500/20">
                             {onlineExternalProfile.name}
                           </Badge>
@@ -1340,7 +1422,10 @@ const GamePage = () => {
 
                       <div className="rounded-lg border border-blue-300/35 bg-blue-500/10 px-3 py-2">
                         <div className="mb-1 flex items-center justify-between gap-2">
-                          <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
+                          <div className="flex items-center gap-2">
+                            <AgentPortrait profile={onlineInternalProfile} side="blue" size="xs" />
+                            <p className="text-xs uppercase tracking-wide text-blue-100/90">Internal Agent Context</p>
+                          </div>
                           <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/20">
                             {onlineInternalProfile.name}
                           </Badge>

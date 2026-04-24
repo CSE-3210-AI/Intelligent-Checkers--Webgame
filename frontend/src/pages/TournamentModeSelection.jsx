@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Bot, ArrowLeft, Swords, Brain } from 'lucide-react';
+import AgentPortrait from '../components/AgentPortrait';
 
 export default function TournamentModeSelection() {
   const navigate = useNavigate();
@@ -48,8 +49,12 @@ export default function TournamentModeSelection() {
           onClick={() => navigate('/tournament/internal')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <Users className="w-8 h-8 text-white" />
+            <div className="mx-auto mb-4 flex items-center gap-3">
+              <AgentPortrait profile={{ name: 'Agent Megha', agentKey: 'megha', type: 'internal_ai' }} side="blue" size="md" />
+              <div className="rounded-full border border-cyan-300/25 bg-slate-950/80 px-2 py-1 text-xs font-semibold tracking-[0.24em] text-cyan-100">
+                VS
+              </div>
+              <AgentPortrait profile={{ name: 'Agent Adiba', agentKey: 'adiba', type: 'adiba' }} side="red" size="md" />
             </div>
             <CardTitle className="text-2xl text-slate-100">Internal AI Tournament</CardTitle>
             <CardDescription className="text-base mt-2 text-slate-300">
@@ -70,8 +75,12 @@ export default function TournamentModeSelection() {
           onClick={() => navigate('/tournament/online')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-lg">
-              <Bot className="w-8 h-8 text-white" />
+            <div className="mx-auto mb-4 flex items-center gap-3">
+              <AgentPortrait profile={{ name: 'Agent Megha', agentKey: 'megha', type: 'internal_ai' }} side="blue" size="sm" />
+              <AgentPortrait profile={{ name: 'Agent Adiba', agentKey: 'adiba', type: 'adiba' }} side="red" size="sm" />
+              <div className="ml-1 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 p-3 shadow-lg">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
             </div>
             <CardTitle className="text-2xl text-slate-100">Online Benchmark Tournament</CardTitle>
             <CardDescription className="text-base mt-2 text-slate-300">
@@ -92,8 +101,11 @@ export default function TournamentModeSelection() {
           onClick={() => navigate('/game?mode=agent-adiba')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <Brain className="w-8 h-8 text-white" />
+            <div className="mx-auto mb-4 flex items-center justify-center gap-3">
+              <AgentPortrait profile={{ name: 'Agent Adiba', agentKey: 'adiba', type: 'adiba' }} side="red" size="lg" />
+              <div className="rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-3 shadow-lg">
+                <Brain className="w-6 h-6 text-white" />
+              </div>
             </div>
             <CardTitle className="text-2xl text-slate-100">Human vs Agent Adiba</CardTitle>
             <CardDescription className="text-base mt-2 text-slate-300">
@@ -114,8 +126,11 @@ export default function TournamentModeSelection() {
           onClick={() => navigate('/game?mode=agent-megha')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <Bot className="w-8 h-8 text-white" />
+            <div className="mx-auto mb-4 flex items-center justify-center gap-3">
+              <AgentPortrait profile={{ name: 'Agent Megha', agentKey: 'megha', type: 'internal_ai' }} side="blue" size="lg" />
+              <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
             </div>
             <CardTitle className="text-2xl text-slate-100">Human vs Agent Megha</CardTitle>
             <CardDescription className="text-base mt-2 text-slate-300">

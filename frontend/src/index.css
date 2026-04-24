@@ -220,6 +220,209 @@
   box-shadow: none !important;
 }
 
+.agent-portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0.22rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.7rem;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: polygon(0 18%, 18% 0, 100% 0, 100% 82%, 82% 100%, 0 100%);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.16), transparent 54%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.agent-portrait::before,
+.agent-portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.agent-portrait::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 34%);
+  opacity: 0.75;
+}
+
+.agent-portrait::after {
+  inset: 10%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  clip-path: inherit;
+}
+
+.agent-portrait--megha {
+  box-shadow:
+    inset 0 1px 0 rgba(193, 237, 255, 0.24),
+    0 0 18px rgba(58, 180, 255, 0.46),
+    0 0 36px rgba(58, 180, 255, 0.2);
+}
+
+.agent-portrait--adiba {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 197, 225, 0.24),
+    0 0 18px rgba(255, 78, 132, 0.45),
+    0 0 36px rgba(255, 78, 132, 0.18);
+}
+
+.agent-portrait--neutral {
+  box-shadow:
+    inset 0 1px 0 rgba(214, 242, 255, 0.2),
+    0 0 18px rgba(64, 211, 255, 0.3),
+    0 0 36px rgba(64, 211, 255, 0.12);
+}
+
+.agent-portrait--interactive {
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.agent-portrait--interactive:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: saturate(1.08);
+}
+
+.agent-portrait__core {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.35rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(12, 20, 40, 0.98), rgba(6, 12, 28, 0.96));
+}
+
+.agent-portrait__core::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 36%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.38;
+}
+
+.agent-portrait__image,
+.agent-portrait__fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.agent-portrait__image {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.agent-portrait__fallback {
+  display: grid;
+  place-items: center;
+  color: rgba(232, 248, 255, 0.92);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(0, 198, 255, 0.3), transparent 38%),
+    linear-gradient(180deg, rgba(25, 56, 91, 0.8), rgba(8, 17, 34, 0.96));
+}
+
+.cyber-agent-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-agent-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.07), transparent 34%),
+    linear-gradient(135deg, rgba(0, 198, 255, 0.08), transparent 38%);
+}
+
+.cyber-agent-card--megha {
+  border-color: rgba(96, 198, 255, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(186, 236, 255, 0.16),
+    0 0 0 1px rgba(76, 181, 255, 0.12),
+    0 18px 38px rgba(10, 22, 44, 0.3),
+    0 0 28px rgba(58, 180, 255, 0.14);
+}
+
+.cyber-agent-card--adiba {
+  border-color: rgba(255, 98, 152, 0.36) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 208, 224, 0.14),
+    0 0 0 1px rgba(255, 98, 152, 0.1),
+    0 18px 38px rgba(32, 12, 24, 0.3),
+    0 0 28px rgba(255, 78, 132, 0.12);
+}
+
+.agent-vs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at center, rgba(8, 18, 38, 0.58), rgba(2, 6, 23, 0.88)),
+    rgba(1, 4, 13, 0.76);
+  backdrop-filter: blur(14px);
+}
+
+.agent-vs-card {
+  width: min(100%, 46rem);
+  border: 1px solid rgba(129, 226, 255, 0.22);
+  border-radius: 1.8rem;
+  padding: 1.4rem;
+  background:
+    radial-gradient(circle at top, rgba(0, 198, 255, 0.12), transparent 44%),
+    linear-gradient(160deg, rgba(7, 15, 30, 0.96), rgba(5, 10, 22, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(165, 239, 255, 0.18),
+    0 0 26px rgba(0, 198, 255, 0.12),
+    0 24px 48px rgba(0, 0, 0, 0.35);
+  animation: cyberVsFadeIn 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-vs-title {
+  animation: cyberVsFadeIn 720ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cyberVsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-portrait--interactive,
+  .agent-vs-card,
+  .agent-vs-title {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 .cyberpunk-theme a {
   color: rgba(155, 232, 255, 0.95);
   transition: color 180ms ease, text-shadow 180ms ease;

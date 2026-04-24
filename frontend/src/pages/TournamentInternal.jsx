@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import AgentPortrait from '../components/AgentPortrait';
+import { AGENT_CARD_COPY } from '../lib/agentCards';
 
 export default function TournamentInternal() {
   const navigate = useNavigate();
@@ -19,32 +21,24 @@ export default function TournamentInternal() {
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
         {/* Agent Megha */}
-        <div className="cyber-card bg-white rounded-xl shadow-lg p-8 flex flex-col items-center border-2 border-blue-200">
-          <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-white">M</span>
-          </div>
-          <h2 className="cyber-heading text-2xl font-bold mb-2 text-blue-800">Agent Megha</h2>
+        <div className="cyber-card cyber-agent-card cyber-agent-card--megha rounded-xl p-8 flex flex-col items-center border-2">
+          <AgentPortrait profile={{ ...AGENT_CARD_COPY.megha, agentKey: 'megha', type: 'internal_ai' }} side="blue" size="xl" className="mb-4" />
+          <h2 className="cyber-heading text-2xl font-bold mb-2 text-blue-100">{AGENT_CARD_COPY.megha.name}</h2>
           <div className="mb-2">
-            <span className="cyber-label font-semibold text-sm px-3 py-1 bg-blue-100 text-blue-800 rounded-full">Minimax + Alpha-Beta Pruning</span>
+            <span className="cyber-label font-semibold text-sm px-3 py-1 rounded-full">{AGENT_CARD_COPY.megha.badge}</span>
           </div>
-          <h3 className="cyber-heading font-semibold text-slate-700 mb-1 mt-4">Strategy Overview</h3>
-          <p className="text-slate-600 text-center text-base">
-            Uses a planning-based approach to evaluate future board states, efficiently pruning suboptimal moves. Excels at deep tactical foresight and optimal decision making under deterministic conditions.
-          </p>
+          <h3 className="cyber-heading font-semibold text-slate-100 mb-1 mt-4">Strategy Overview</h3>
+          <p className="text-slate-300 text-center text-base">{AGENT_CARD_COPY.megha.summary}</p>
         </div>
         {/* Agent Adiba */}
-        <div className="cyber-card bg-white rounded-xl shadow-lg p-8 flex flex-col items-center border-2 border-slate-400">
-          <div className="w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-white">A</span>
-          </div>
-          <h2 className="cyber-heading text-2xl font-bold mb-2 text-slate-800">Agent Adiba</h2>
+        <div className="cyber-card cyber-agent-card cyber-agent-card--adiba rounded-xl p-8 flex flex-col items-center border-2">
+          <AgentPortrait profile={{ ...AGENT_CARD_COPY.adiba, agentKey: 'adiba', type: 'adiba' }} side="red" size="xl" className="mb-4" />
+          <h2 className="cyber-heading text-2xl font-bold mb-2 text-rose-100">{AGENT_CARD_COPY.adiba.name}</h2>
           <div className="mb-2">
-            <span className="cyber-label font-semibold text-sm px-3 py-1 bg-slate-200 text-slate-800 rounded-full">Monte Carlo Simulation + Fuzzy Logic</span>
+            <span className="cyber-label font-semibold text-sm px-3 py-1 rounded-full">{AGENT_CARD_COPY.adiba.badge}</span>
           </div>
-          <h3 className="cyber-heading font-semibold text-slate-700 mb-1 mt-4">Strategy Overview</h3>
-          <p className="text-slate-600 text-center text-base">
-            Leverages probabilistic simulations and fuzzy logic to explore a wide range of possible outcomes, adapting dynamically to uncertainty and non-deterministic scenarios.
-          </p>
+          <h3 className="cyber-heading font-semibold text-slate-100 mb-1 mt-4">Strategy Overview</h3>
+          <p className="text-slate-300 text-center text-base">{AGENT_CARD_COPY.adiba.summary}</p>
         </div>
       </div>
       <Button

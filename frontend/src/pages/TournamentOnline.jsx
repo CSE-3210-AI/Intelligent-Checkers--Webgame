@@ -12,7 +12,7 @@ export default function TournamentOnline() {
       <button
         type="button"
         aria-label="Go back"
-        className="cyber-button absolute left-8 top-8 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm z-10"
+        className="CyberButton CyberButton--secondary absolute left-8 top-8 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm z-10"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="w-4 h-4" /> Back

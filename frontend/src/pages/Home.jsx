@@ -39,14 +39,14 @@ const Home = () => {
             <nav className="hidden items-center gap-6 md:flex" />
 
             <div className="flex items-center gap-3">
-              <button className="cyber-button rounded-md bg-transparent px-4 py-2 font-medium text-white/90 transition hover:bg-cyan-400/15 hover:text-cyan-100 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]">
+              <button className="CyberButton CyberButton--secondary rounded-md px-4 py-2 font-medium">
                 Rankings
               </button>
 
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    className="cyber-button flex items-center gap-2 rounded-md border border-cyan-300/35 bg-black/45 px-4 py-2 font-semibold text-white transition hover:bg-cyan-500/20 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+                    className="CyberButton CyberButton--secondary flex items-center gap-2 rounded-md px-4 py-2 font-semibold"
                     onClick={() => setDropdown((d) => !d)}
                   >
                     <span className="font-bold">{user.username}</span>
@@ -56,7 +56,7 @@ const Home = () => {
                   {dropdown && (
                     <div className="absolute right-0 z-50 mt-2 w-44 rounded-lg border border-white/15 bg-black/80 p-1 shadow-[0_18px_38px_rgba(0,0,0,0.5)] backdrop-blur-md">
                       <button
-                        className="cyber-button flex w-full items-center gap-2 rounded-md px-4 py-2 text-left text-red-200 transition hover:bg-red-500/20 hover:text-red-100"
+                        className="CyberButton CyberButton--danger flex w-full items-center gap-2 rounded-md px-4 py-2 text-left"
                         onClick={() => {
                           logout();
                           setDropdown(false);

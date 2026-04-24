@@ -31,6 +31,8 @@ const CapturedPiecesOverlay = ({
   const progressLogBucketRef = useRef(-1);
   const [frameProgress, setFrameProgress] = useState(0);
   const [fragments, setFragments] = useState([]);
+  const [particles, setParticles] = useState([]);
+  const [bursts, setBursts] = useState([]);
 
   useEffect(() => {
     if (rafRef.current) {
@@ -44,6 +46,8 @@ const CapturedPiecesOverlay = ({
 
     if (!captureAnimationPayload) {
       setFragments([]);
+      setParticles([]);
+      setBursts([]);
       return;
     }
 
@@ -70,12 +74,23 @@ const CapturedPiecesOverlay = ({
     const cellHeight = rect.height / 8;
 
     const generatedFragments = [];
+    const generatedParticles = [];
+    const generatedBursts = [];
+
     (captureAnimationPayload.pieces ?? [])
       .filter(piece => piece?.color)
       .forEach((piece, pieceIndex) => {
         const startX = (piece.col + 0.5) * cellWidth;
         const startY = (piece.row + 0.5) * cellHeight;
         const fragmentCount = randomIntBetween(18, 24);
+        const particleCount = randomIntBetween(10, 14);
+
+        generatedBursts.push({
+          id: `burst-${captureAnimationPayload.animationId}-${piece.row}-${piece.col}`,
+          startX,
+          startY,
+          color: piece.color === 'blue' ? '#22d3ee' : '#fb7185',
+        });
 
         for (let i = 0; i < fragmentCount; i += 1) {
           // Per-fragment jitter helps avoid visual clustering while keeping randomness.
@@ -97,6 +112,20 @@ const CapturedPiecesOverlay = ({
             borderRadius: Math.random() < 0.6 ? '9999px' : '10%',
           });
         }
+
+        for (let i = 0; i < particleCount; i += 1) {
+          const angle = (i / particleCount) * Math.PI * 2 + randomBetween(-0.25, 0.25);
+          const speed = randomBetween(38, 94);
+          generatedParticles.push({
+            id: `particle-${captureAnimationPayload.animationId}-${piece.row}-${piece.col}-${i}`,
+            startX,
+            startY,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            size: randomBetween(2, 5),
+            color: getFragmentColor(piece.color, pieceIndex + i + fragmentCount),
+          });
+        }
       });
 
     if (!generatedFragments.length) {
@@ -105,6 +134,8 @@ const CapturedPiecesOverlay = ({
     }
 
     setFragments(generatedFragments);
+    setParticles(generatedParticles);
+    setBursts(generatedBursts);
 
     console.log('shatter start', {
       animationId: captureAnimationPayload.animationId,
@@ -151,12 +182,59 @@ const CapturedPiecesOverlay = ({
   }
 
   const eased = easeOut(frameProgress);
+  const flashBoost = Math.max(0, 1 - frameProgress / 0.25);
 
   return (
     <div
       className="absolute inset-0 pointer-events-none z-[72]"
       style={showDebug ? { outline: '1px dashed rgba(250, 204, 21, 0.65)' } : undefined}
     >
+      {bursts.map((burst) => {
+        const burstSize = 34;
+        const scale = 0.45 + eased * 1.75;
+        const opacity = Math.max(0, 0.85 - eased * 1.1);
+        return (
+          <div
+            key={burst.id}
+            className="cp-capture-burst absolute rounded-full pointer-events-none"
+            style={{
+              width: `${burstSize}px`,
+              height: `${burstSize}px`,
+              left: `${burst.startX - burstSize / 2}px`,
+              top: `${burst.startY - burstSize / 2}px`,
+              opacity,
+              transform: `scale(${scale})`,
+              background: `radial-gradient(circle, ${burst.color} 0%, rgba(255,255,255,0.25) 38%, rgba(255,255,255,0) 100%)`,
+            }}
+          />
+        );
+      })}
+
+      {particles.map((particle) => {
+        const translateX = particle.dx * eased;
+        const translateY = particle.dy * eased;
+        const scale = 1 - 0.52 * eased;
+        const opacity = Math.max(0, 0.95 - eased * 1.04);
+
+        return (
+          <div
+            key={particle.id}
+            className="absolute pointer-events-none rounded-full"
+            style={{
+              left: `${particle.startX - particle.size / 2}px`,
+              top: `${particle.startY - particle.size / 2}px`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              backgroundColor: particle.color,
+              opacity,
+              transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`,
+              boxShadow: `0 0 ${4 + flashBoost * 6}px ${particle.color}`,
+              willChange: 'transform, opacity',
+            }}
+          />
+        );
+      })}
+
       {fragments.map((fragment) => {
         const translateX = fragment.dx * eased;
         const translateY = fragment.dy * eased;
@@ -164,6 +242,7 @@ const CapturedPiecesOverlay = ({
         const scale = 1 - 0.5 * eased;
         const opacity = 1 - eased;
         const transform = `translate3d(${translateX - fragment.size / 2}px, ${translateY - fragment.size / 2}px, 0) rotate(${rotate}deg) scale(${scale})`;
+        const glowRadius = 8 + flashBoost * 12;
 
         return (
           <div
@@ -179,7 +258,7 @@ const CapturedPiecesOverlay = ({
               borderRadius: fragment.borderRadius,
               opacity,
               transform,
-              boxShadow: '0 0 8px currentColor',
+              boxShadow: `0 0 ${glowRadius}px currentColor`,
               willChange: 'transform, opacity',
               border: showDebug ? '1px solid rgba(250, 204, 21, 0.85)' : 'none',
             }}

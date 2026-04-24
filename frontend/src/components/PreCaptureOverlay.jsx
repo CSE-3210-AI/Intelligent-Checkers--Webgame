@@ -9,16 +9,18 @@ const AURA_CLIP_PATH =
 const getAuraPalette = (pieceColor) => {
   if (pieceColor === 'blue') {
     return {
-      base: 'rgba(96, 165, 250, 0.58)',
-      edge: 'rgba(59, 130, 246, 0.95)',
-      glow: 'rgba(59, 130, 246, 0.90)',
+      base: 'rgba(94, 236, 255, 0.58)',
+      edge: 'rgba(0, 187, 255, 0.95)',
+      glow: 'rgba(0, 187, 255, 0.88)',
+      ring: 'rgba(180, 248, 255, 0.8)',
     };
   }
 
   return {
-    base: 'rgba(248, 113, 113, 0.58)',
-    edge: 'rgba(239, 68, 68, 0.95)',
-    glow: 'rgba(239, 68, 68, 0.90)',
+    base: 'rgba(255, 120, 206, 0.6)',
+    edge: 'rgba(255, 57, 143, 0.95)',
+    glow: 'rgba(255, 57, 143, 0.88)',
+    ring: 'rgba(255, 205, 235, 0.82)',
   };
 };
 
@@ -101,6 +103,7 @@ const PreCaptureOverlay = ({
         piece: preCaptureAnimationPayload.piece,
         rotationDeg: getRotationDeg(progress),
         scale: getScale(progress),
+        progress,
       });
 
       if (progress < 1) {
@@ -128,6 +131,7 @@ const PreCaptureOverlay = ({
   const pieceSize = Math.min(frameState.cellWidth, frameState.cellHeight) * 0.84;
   const auraSize = pieceSize * 1.38;
   const auraPalette = getAuraPalette(frameState.piece.color);
+  const pulse = 0.72 + 0.35 * Math.sin(frameState.progress * Math.PI);
 
   const pieceLeft = frameState.x - pieceSize / 2;
   const pieceTop = frameState.y - pieceSize / 2;
@@ -151,8 +155,25 @@ const PreCaptureOverlay = ({
           style={{
             clipPath: AURA_CLIP_PATH,
             background: `radial-gradient(circle at 50% 50%, ${auraPalette.base} 0%, ${auraPalette.edge} 62%, rgba(255, 255, 255, 0.10) 100%)`,
-            boxShadow: `0 0 10px ${auraPalette.glow}, 0 0 20px ${auraPalette.glow}, 0 0 30px ${auraPalette.glow}`,
-            opacity: 0.95,
+            boxShadow: `0 0 10px ${auraPalette.glow}, 0 0 20px ${auraPalette.glow}, 0 0 28px ${auraPalette.glow}`,
+            opacity: 0.88 * pulse,
+          }}
+        />
+        <div
+          className="absolute inset-0 cp-precapture-trail-layer"
+          style={{
+            clipPath: AURA_CLIP_PATH,
+            background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 38%, ${auraPalette.base} 82%, rgba(255,255,255,0) 100%)`,
+            opacity: 0.6 * pulse,
+          }}
+        />
+        <div
+          className="absolute rounded-full cp-precapture-energy-ring"
+          style={{
+            inset: '16%',
+            border: `1px solid ${auraPalette.ring}`,
+            boxShadow: `0 0 10px ${auraPalette.glow}`,
+            opacity: 0.76,
           }}
         />
       </div>
@@ -165,7 +186,11 @@ const PreCaptureOverlay = ({
           transform: `translate3d(${pieceLeft}px, ${pieceTop}px, 0)`,
         }}
       >
-        <Piece color={frameState.piece.color} isKing={frameState.piece.isKing} />
+        <Piece
+          color={frameState.piece.color}
+          isKing={frameState.piece.isKing}
+          mode="pre-capture"
+        />
       </div>
     </div>
   );

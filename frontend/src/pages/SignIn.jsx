@@ -32,7 +32,7 @@ export default function SignIn() {
         <button
           type="button"
           aria-label="Go back"
-          className="cyber-button absolute left-4 top-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm"
+          className="CyberButton CyberButton--secondary absolute left-4 top-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="w-4 h-4" /> Back

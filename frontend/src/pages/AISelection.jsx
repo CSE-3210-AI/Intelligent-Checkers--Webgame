@@ -14,41 +14,41 @@ const AISelection = () => {
       id: 'easy', 
       name: 'Easy', 
       desc: 'Perfect for beginners', 
-      color: 'from-emerald-400 to-emerald-600',
+      color: 'from-cyan-400 to-blue-600',
       icon: Zap,
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
-      ringColor: 'ring-emerald-600'
+      bgColor: 'bg-cyan-50',
+      borderColor: 'border-cyan-200',
+      ringColor: 'ring-cyan-600'
     },
     { 
       id: 'medium', 
       name: 'Medium', 
       desc: 'Balanced challenge', 
-      color: 'from-amber-400 to-amber-600',
+      color: 'from-sky-400 to-indigo-600',
       icon: Target,
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
-      ringColor: 'ring-amber-600'
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-200',
+      ringColor: 'ring-indigo-600'
     },
     { 
       id: 'hard', 
       name: 'Hard', 
       desc: 'Advanced tactics', 
-      color: 'from-orange-500 to-orange-700',
+      color: 'from-indigo-500 to-violet-700',
       icon: Brain,
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
-      ringColor: 'ring-orange-600'
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      ringColor: 'ring-violet-600'
     },
     { 
       id: 'expert', 
       name: 'Expert', 
       desc: 'Grandmaster level', 
-      color: 'from-red-500 to-red-700',
+      color: 'from-fuchsia-500 to-pink-700',
       icon: Crown,
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
-      ringColor: 'ring-red-600'
+      bgColor: 'bg-fuchsia-50',
+      borderColor: 'border-fuchsia-200',
+      ringColor: 'ring-pink-600'
     },
   ];
 

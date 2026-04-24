@@ -10,7 +10,7 @@ export default function TournamentModeSelection() {
       <button
         type="button"
         aria-label="Go back"
-        className="cyber-button absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
+        className="CyberButton CyberButton--secondary absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="w-4 h-4" /> Back
@@ -22,11 +22,11 @@ export default function TournamentModeSelection() {
 
         {/* Human vs Human */}
         <Card
-          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-emerald-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-emerald-300/65"
+          className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-cyan-300/35 bg-slate-900/55 backdrop-blur-xl hover:border-cyan-300/65"
           onClick={() => navigate('/game?autostart=true')}
         >
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
               <Swords className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl text-slate-100">Human vs Human</CardTitle>

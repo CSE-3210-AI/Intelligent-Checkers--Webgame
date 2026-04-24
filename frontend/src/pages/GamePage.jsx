@@ -939,7 +939,7 @@ const GamePage = () => {
 
   // Responsive container and layout
   return (
-    <div className="min-h-screen text-slate-100">
+    <div className="cyber-game-ui min-h-screen text-slate-100">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/65 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
           <div className="flex items-center gap-4">
@@ -951,7 +951,7 @@ const GamePage = () => {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold uppercase tracking-[0.22em] text-blue-100 md:text-xl">Checkers Arena</h1>
+            <h1 className="cyber-heading text-lg font-semibold uppercase tracking-[0.22em] text-blue-100 md:text-xl">Checkers Arena</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-slate-100 hover:bg-white/10">
@@ -969,7 +969,7 @@ const GamePage = () => {
           <section className="min-w-0 space-y-3 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
-                <div className={`rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? 'border-blue-300/50 bg-blue-500/20' : 'border-white/10 bg-slate-900/60'}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/25 text-blue-200">
@@ -996,7 +996,7 @@ const GamePage = () => {
 
                 <Separator className="bg-white/10" />
 
-                <div className={`rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? 'border-rose-300/50 bg-rose-500/20' : 'border-white/10 bg-slate-900/60'}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? 'border-rose-300/50 bg-rose-500/20' : 'border-white/10 bg-slate-900/60'}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/25 text-rose-200">
@@ -1045,14 +1045,14 @@ const GamePage = () => {
                 <Button
                   onClick={handleNewGame}
                   disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating}
-                  className="h-11 w-full rounded-xl bg-blue-500/80 font-semibold text-white hover:bg-blue-500"
+                  className="h-11 w-full rounded-xl font-semibold"
                 >
                   {(loading || isFetchingAgentMove) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   New Game
                 </Button>
 
                 {mode === 'play' && hasAiPlayersInMatch && (
-                  <div className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
+                  <div className="CyberPanel flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-3 py-2">
                     <div>
                       <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Auto Play</p>
                       <p className="text-[11px] text-slate-400">{autoPlayEnabled ? 'ON: AI turns run automatically' : 'OFF: click Agent Move manually'}</p>
@@ -1069,7 +1069,7 @@ const GamePage = () => {
                   <Button
                     onClick={handleAgentMove}
                     disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner}
-                    className="h-11 w-full rounded-xl bg-rose-500/80 font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                    className="h-11 w-full rounded-xl font-semibold disabled:opacity-60"
                   >
                     {isFetchingAgentMove && !autoPlayEnabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {autoPlayEnabled
@@ -1084,7 +1084,7 @@ const GamePage = () => {
                   <Button
                     onClick={handleTogglePreviousBoard}
                     variant="outline"
-                    className="h-11 rounded-xl border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
+                    className="h-11 rounded-xl"
                     disabled={history.length === 0 || isFetchingAgentMove || isMoveAnimating || isCaptureAnimating || isPreCaptureAnimating}
                   >
                     {isShowingPreviousBoard ? 'Current Board' : 'Last Move'}
@@ -1092,8 +1092,8 @@ const GamePage = () => {
                   <Button
                     onClick={() => setShowResignModal(true)}
                     disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner || mode !== 'play'}
-                    variant="outline"
-                    className="h-11 rounded-xl border-rose-300/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
+                    variant="destructive"
+                    className="h-11 rounded-xl"
                   >
                     Resign
                   </Button>
@@ -1122,7 +1122,7 @@ const GamePage = () => {
                   <Button
                     onClick={handleNewGame}
                     disabled={loading}
-                    className="h-11 w-full rounded-xl bg-emerald-500/90 font-semibold text-white hover:bg-emerald-500"
+                    className="h-11 w-full rounded-xl font-semibold"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Play Game
@@ -1138,8 +1138,8 @@ const GamePage = () => {
             )}
 
             {mode === 'play' && isShowingPreviousBoard && (
-              <Card className="w-full rounded-2xl border border-amber-300/40 bg-amber-500/10 backdrop-blur-xl">
-                <CardContent className="p-3 text-sm font-medium text-amber-100">Viewing Previous Move</CardContent>
+              <Card className="w-full rounded-2xl border border-cyan-300/40 bg-cyan-500/10 backdrop-blur-xl">
+                <CardContent className="p-3 text-sm font-medium text-cyan-100">Viewing Previous Move</CardContent>
               </Card>
             )}
 
@@ -1175,7 +1175,7 @@ const GamePage = () => {
               )}
             </div>
 
-            <div className="mx-auto flex w-full items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-5 py-3">
+            <div className="CyberPanel mx-auto flex w-full items-center justify-between rounded-xl border border-white/10 bg-slate-950/45 px-5 py-3">
               <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Turn</span>
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                 <span className={`h-2.5 w-2.5 rounded-full ${currentPlayer === 'blue' ? 'bg-blue-300' : 'bg-rose-300'} ${mode === 'play' && !winner ? 'animate-pulse' : ''}`} />
@@ -1446,25 +1446,27 @@ const GamePage = () => {
 
       {showResignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
-          <Card className="w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
+          <Card className="CyberDialog w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
             <CardContent className="space-y-5 p-6 text-center">
               <h2 className="text-xl font-bold text-white">Are you sure you want to resign?</h2>
               <div className="space-y-2">
                 <Button
                   onClick={() => navigate(-1)}
-                  className="h-11 w-full rounded-xl bg-amber-500 text-white hover:bg-amber-400"
+                  variant="destructive"
+                  className="h-11 w-full rounded-xl"
                 >
                   Exit Game
                 </Button>
                 <Button
                   onClick={() => { setShowResignModal(false); handleNewGame(); }}
-                  className="h-11 w-full rounded-xl bg-emerald-500 text-white hover:bg-emerald-400"
+                  className="h-11 w-full rounded-xl"
                 >
                   Start New Game
                 </Button>
                 <Button
                   onClick={() => setShowResignModal(false)}
-                  className="h-11 w-full rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+                  variant="secondary"
+                  className="h-11 w-full rounded-xl"
                 >
                   Cancel
                 </Button>
@@ -1476,7 +1478,7 @@ const GamePage = () => {
 
       {winner && mode === 'play' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
-          <Card className="w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
+          <Card className="CyberDialog w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
             <CardContent className="space-y-4 p-7 text-center">
               <div className="text-5xl">🏆</div>
               <h2 className="text-3xl font-extrabold text-white">
@@ -1485,7 +1487,7 @@ const GamePage = () => {
               <p className="text-slate-300">Game over - start a new match?</p>
               <Button
                 onClick={handleNewGame}
-                className="h-11 w-full rounded-xl bg-amber-500 text-white hover:bg-amber-400"
+                className="h-11 w-full rounded-xl"
               >
                 New Game
               </Button>

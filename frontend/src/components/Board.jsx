@@ -3,6 +3,7 @@ import Square from './Square';
 import PreCaptureOverlay from './PreCaptureOverlay';
 import MovingPieceOverlay from './MovingPieceOverlay';
 import CapturedPiecesOverlay from './CapturedPiecesOverlay';
+import './gameplay-cyber.css';
 
 /**
  * Board – renders the 8×8 checkers grid.
@@ -69,10 +70,10 @@ const Board = ({
   };
 
   return (
-    <div className="w-full bg-black/80 p-2 rounded-2xl shadow-2xl">
+    <div className="cp-board-shell w-full p-2 rounded-2xl shadow-2xl">
       <div
         ref={boardGridRef}
-        className="relative grid grid-cols-8 gap-0 w-full aspect-square rounded-2xl overflow-hidden"
+        className="cp-board-grid relative grid grid-cols-8 gap-0 w-full aspect-square rounded-2xl overflow-hidden"
       >
         {Array.from({ length: 8 }, (_, row) =>
           Array.from({ length: 8 }, (_, col) => renderSquare(row, col))

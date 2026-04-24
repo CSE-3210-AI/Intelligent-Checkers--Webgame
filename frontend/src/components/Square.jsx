@@ -2,15 +2,7 @@ import Piece from './Piece';
 import PreCaptureHintAura from './PreCaptureHintAura';
 
 /**
- * Square – a single cell on the checkers board.
- *
- * Props
- * -----
- * isDark        bool    – dark (playable) or light square
- * piece         object|null – { color, isKing } or null
- * isHighlighted bool    – legal move destination for the selected piece
- * isSelected    bool    – this square's piece is currently selected
- * onClick       fn|undefined – click handler from Board
+ * Square - a single cell on the checkers board.
  */
 const Square = ({
   isDark,
@@ -19,47 +11,57 @@ const Square = ({
   isHighlighted,
   isSelected,
   isLastMove,
+  isMoveable = false,
   isPreCaptureCandidate = false,
   onClick,
 }) => {
-  const bgColor = isDark ? 'bg-gradient-to-br from-[#b08d57] to-[#7c5c2e]' : 'bg-[#F0E6D2]';
+  const bgColor = isDark
+    ? 'cp-square-dark bg-gradient-to-br from-[#061226] via-[#0a1d35] to-[#030b18]'
+    : 'cp-square-light bg-gradient-to-br from-[#152741] via-[#102238] to-[#0a172a]';
   const visiblePiece = suppressPiece ? null : piece;
 
   return (
     <div
-      className={`aspect-square ${bgColor} flex items-center justify-center relative transition-all duration-200
-        ${onClick && isDark ? 'cursor-pointer hover:scale-105' : ''}
-        ${isLastMove ? 'z-30' : ''}
-      `}
+      className={`cp-square aspect-square ${bgColor} flex items-center justify-center relative transition-all duration-200 ${
+        onClick && isDark ? 'cp-square-interactive cursor-pointer hover:scale-[1.02]' : ''
+      } ${isLastMove ? 'z-30' : ''}`}
       onClick={onClick}
     >
-      {/* Last move highlight (yellow outline) */}
+      <div className="cp-square-grid absolute inset-0 pointer-events-none" />
+
       {isLastMove && (
-        <div className="absolute inset-0 rounded-lg border-4 border-yellow-400 animate-pulse pointer-events-none z-30" />
+        <div className="cp-last-move-ring absolute inset-[4px] pointer-events-none z-30" />
       )}
 
-      {/* Green overlay – marks the currently selected piece's square */}
       {isSelected && (
-        <div className="absolute inset-0 bg-green-400/40 pointer-events-none z-10 rounded-lg" />
+        <div className="cp-selected-overlay absolute inset-[3px] pointer-events-none z-10" />
       )}
 
-      {/* Destination dot – shown on empty dark squares the selected piece can reach */}
+      {isMoveable && !!visiblePiece && !isSelected && (
+        <div className="cp-moveable-outline absolute inset-[6px] pointer-events-none z-[12]" />
+      )}
+
       {isHighlighted && !visiblePiece && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="w-8 h-8 rounded-full bg-yellow-400/75" />
+          <div className="cp-highlight-dot" />
         </div>
       )}
 
-      {/* Destination ring – shown when a capture lands on an (edge-case) occupied square */}
       {isHighlighted && visiblePiece && (
-        <div className="absolute inset-0 ring-2 ring-inset ring-yellow-400 pointer-events-none z-20 rounded-lg" />
+        <div className="cp-highlight-ring absolute inset-[3px] pointer-events-none z-20" />
       )}
 
       {isPreCaptureCandidate && !!visiblePiece && (
         <PreCaptureHintAura color={visiblePiece.color} />
       )}
 
-      {visiblePiece && <Piece color={visiblePiece.color} isKing={visiblePiece.isKing} />}
+      {visiblePiece && (
+        <Piece
+          color={visiblePiece.color}
+          isKing={visiblePiece.isKing}
+          isSelected={isSelected}
+        />
+      )}
     </div>
   );
 };

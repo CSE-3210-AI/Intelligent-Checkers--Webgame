@@ -1,0 +1,43 @@
+﻿.bg-container {
+  isolation: isolate;
+}
+
+.home-bg-media {
+  background-image: url('/video/pixel-jeff-clipa-s.gif');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(1.8px) saturate(1.05);
+  transform: scale(1.03);
+  will-change: transform;
+}
+
+.home-bg-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 8, 16, 0.58) 0%,
+    rgba(4, 7, 13, 0.72) 42%,
+    rgba(2, 4, 10, 0.82) 100%
+  );
+  backdrop-filter: blur(1px);
+}
+
+@media (max-width: 768px) {
+  .home-bg-media {
+    background-image: url('/video/pixel-jeff-clipa-s-fallback.png');
+    filter: none;
+    transform: none;
+  }
+
+  .home-bg-overlay {
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-bg-media {
+    background-image: url('/video/pixel-jeff-clipa-s-fallback.png');
+    filter: none;
+    transform: none;
+  }
+}

@@ -6,16 +6,16 @@ import { Users, Bot, ArrowLeft, Swords, Brain } from 'lucide-react';
 export default function TournamentModeSelection() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[radial-gradient(circle_at_15%_10%,rgba(59,130,246,0.25),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.18),transparent_40%),linear-gradient(180deg,#020617_0%,#081533_60%,#071225_100%)] px-4 py-12 relative text-slate-100">
+    <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-12 text-slate-100">
       <button
         type="button"
         aria-label="Go back"
-        className="absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
+        className="cyber-button absolute left-8 top-8 flex items-center gap-1 text-blue-200 hover:text-blue-100 font-medium text-sm z-10"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-blue-100 via-cyan-200 to-blue-100 bg-clip-text text-transparent">
+      <h1 className="cyber-heading text-4xl md:text-5xl font-extrabold text-center mb-10 bg-linear-to-r from-blue-100 via-cyan-200 to-blue-100 bg-clip-text text-transparent">
         Tournament Mode Selection
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl mb-12">

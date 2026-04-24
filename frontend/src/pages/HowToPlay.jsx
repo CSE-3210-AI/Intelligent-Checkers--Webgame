@@ -109,7 +109,7 @@ export default function HowToPlay() {
   const StepIcon = step.icon;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,rgba(56,189,248,0.18),transparent_38%),radial-gradient(circle_at_88%_15%,rgba(251,146,60,0.16),transparent_42%),linear-gradient(180deg,#081122_0%,#0f1e36_45%,#15253a_100%)] px-4 py-8 text-slate-100 md:px-6">
+    <div className="min-h-screen px-4 py-8 text-slate-100 md:px-6">
       <div className="mx-auto w-full max-w-7xl">
         <header className="mb-6 flex items-center justify-between gap-3">
           <Button
@@ -123,8 +123,8 @@ export default function HowToPlay() {
           <Badge className="bg-cyan-400/20 text-cyan-100 hover:bg-cyan-400/20">Official Rule Guide</Badge>
         </header>
 
-        <section className="mb-6 rounded-2xl border border-white/10 bg-slate-900/55 p-6 backdrop-blur-xl">
-          <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">How To Play Checkers</h1>
+        <section className="cyber-card mb-6 rounded-2xl border border-white/10 bg-slate-900/55 p-6 backdrop-blur-xl">
+          <h1 className="cyber-heading text-3xl font-black tracking-tight text-white md:text-5xl">How To Play Checkers</h1>
           <p className="mt-3 max-w-3xl text-slate-200/90">
             This guide mirrors the exact rule behavior used by your game engine: diagonal movement, forced captures, chain jumps, and king promotion.
             All examples below use the same board renderer as live gameplay.
@@ -141,7 +141,7 @@ export default function HowToPlay() {
                   key={item.id}
                   type="button"
                   onClick={() => setActiveStep(idx)}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
+                  className={`cyber-card w-full rounded-xl border p-4 text-left transition ${
                     isActive
                       ? 'border-cyan-300/55 bg-cyan-400/15'
                       : 'border-white/10 bg-slate-900/45 hover:border-white/25 hover:bg-white/5'
@@ -176,8 +176,8 @@ export default function HowToPlay() {
                   />
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-slate-950/45 p-4">
-                  <p className="mb-3 text-sm uppercase tracking-wide text-cyan-100/85">Rule Notes</p>
+                <div className="cyber-card rounded-xl border border-white/10 bg-slate-950/45 p-4">
+                  <p className="cyber-label mb-3 text-sm uppercase tracking-wide text-cyan-100/85">Rule Notes</p>
                   <ul className="space-y-2 text-sm text-slate-100/95">
                     {step.rules.map((line) => (
                       <li key={line}>- {line}</li>

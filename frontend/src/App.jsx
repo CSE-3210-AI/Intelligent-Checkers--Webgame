@@ -11,24 +11,27 @@ import TournamentModeSelection from './pages/TournamentModeSelection'
 import TournamentInternal from './pages/TournamentInternal'
 import TournamentOnline from './pages/TournamentOnline'
 import HowToPlay from './pages/HowToPlay'
+import GlobalBackgroundLayout from './components/layout/GlobalBackgroundLayout'
 
 function App() {
   return (
     <UserProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/ai-selection" element={<AISelection />} />
-          <Route path="/game" element={<GamePage />} />
-          <Route path="/meet-agents" element={<MeetAgents />} />
-          <Route path="/select-internal-agent" element={<SelectInternalAgent />} />
-          <Route path="/tournaments" element={<TournamentModeSelection />} />
-          <Route path="/tournament/internal" element={<TournamentInternal />} />
-          <Route path="/tournament/online" element={<TournamentOnline />} />
-          <Route path="/how-to-play" element={<HowToPlay />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-        </Routes>
+        <GlobalBackgroundLayout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/ai-selection" element={<AISelection />} />
+            <Route path="/game" element={<GamePage />} />
+            <Route path="/meet-agents" element={<MeetAgents />} />
+            <Route path="/select-internal-agent" element={<SelectInternalAgent />} />
+            <Route path="/tournaments" element={<TournamentModeSelection />} />
+            <Route path="/tournament/internal" element={<TournamentInternal />} />
+            <Route path="/tournament/online" element={<TournamentOnline />} />
+            <Route path="/how-to-play" element={<HowToPlay />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Routes>
+        </GlobalBackgroundLayout>
       </Router>
     </UserProvider>
   )

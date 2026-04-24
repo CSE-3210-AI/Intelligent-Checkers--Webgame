@@ -53,7 +53,7 @@ const AISelection = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex flex-col items-center justify-center px-8 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center px-8 py-12">
       <div className="max-w-5xl w-full">
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
@@ -62,7 +62,7 @@ const AISelection = () => {
             AI Opponent
           </Badge>
           
-          <h1 className="text-6xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+          <h1 className="cyber-heading text-6xl font-extrabold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
             Select AI Difficulty
           </h1>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">

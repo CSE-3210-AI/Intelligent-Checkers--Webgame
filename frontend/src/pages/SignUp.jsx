@@ -36,12 +36,12 @@ export default function SignUp() {
     navigate('/');
   }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-slate-100 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md p-0 rounded-2xl shadow-2xl border-2 border-blue-200 bg-white/95 backdrop-blur-md relative">
         <button
           type="button"
           aria-label="Go back"
-          className="absolute left-4 top-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm"
+          className="cyber-button absolute left-4 top-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="w-4 h-4" /> Back

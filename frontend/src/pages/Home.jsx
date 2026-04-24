@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Trophy, Gamepad2, ChevronDown, LogOut } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
-import './Home.css';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -27,11 +26,7 @@ const Home = () => {
   }, [dropdown]);
 
   return (
-    <div className="bg-container relative min-h-screen overflow-hidden">
-      <div className="home-bg-media absolute inset-0 z-0" aria-hidden="true" />
-      <div className="home-bg-overlay absolute inset-0 z-10" aria-hidden="true" />
-
-      <div className="content relative z-20 flex min-h-screen flex-col text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.8)]">
+    <div className="relative flex min-h-screen flex-col text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.8)]">
         <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-black/60 px-5 py-4 backdrop-blur-md md:px-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-3">
@@ -44,14 +39,14 @@ const Home = () => {
             <nav className="hidden items-center gap-6 md:flex" />
 
             <div className="flex items-center gap-3">
-              <button className="rounded-md bg-transparent px-4 py-2 font-medium text-white/90 transition hover:bg-cyan-400/15 hover:text-cyan-100 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]">
+              <button className="cyber-button rounded-md bg-transparent px-4 py-2 font-medium text-white/90 transition hover:bg-cyan-400/15 hover:text-cyan-100 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]">
                 Rankings
               </button>
 
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    className="flex items-center gap-2 rounded-md border border-cyan-300/35 bg-black/45 px-4 py-2 font-semibold text-white transition hover:bg-cyan-500/20 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+                    className="cyber-button flex items-center gap-2 rounded-md border border-cyan-300/35 bg-black/45 px-4 py-2 font-semibold text-white transition hover:bg-cyan-500/20 hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
                     onClick={() => setDropdown((d) => !d)}
                   >
                     <span className="font-bold">{user.username}</span>
@@ -61,7 +56,7 @@ const Home = () => {
                   {dropdown && (
                     <div className="absolute right-0 z-50 mt-2 w-44 rounded-lg border border-white/15 bg-black/80 p-1 shadow-[0_18px_38px_rgba(0,0,0,0.5)] backdrop-blur-md">
                       <button
-                        className="flex w-full items-center gap-2 rounded-md px-4 py-2 text-left text-red-200 transition hover:bg-red-500/20 hover:text-red-100"
+                        className="cyber-button flex w-full items-center gap-2 rounded-md px-4 py-2 text-left text-red-200 transition hover:bg-red-500/20 hover:text-red-100"
                         onClick={() => {
                           logout();
                           setDropdown(false);
@@ -95,7 +90,7 @@ const Home = () => {
                 Ready for Battle
               </Badge>
 
-              <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white md:text-6xl">
+              <h1 className="cyber-heading mb-6 text-4xl font-extrabold tracking-tight text-white md:text-6xl">
                 Welcome to CheckersAI
               </h1>
 
@@ -144,7 +139,6 @@ const Home = () => {
             </div>
           </div>
         </footer>
-      </div>
     </div>
   );
 };

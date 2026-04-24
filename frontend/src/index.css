@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap");
 
 @theme {
   --color-background: oklch(100% 0 0);
@@ -44,6 +45,195 @@
     --color-border: oklch(18% 0.02 285);
     --color-input: oklch(18% 0.02 285);
     --color-ring: oklch(84% 0.01 285);
+  }
+}
+
+:root {
+  --cyber-bg: rgba(7, 16, 33, 0.78);
+  --cyber-bg-strong: rgba(8, 21, 40, 0.88);
+  --cyber-border: rgba(0, 200, 255, 0.42);
+  --cyber-border-soft: rgba(0, 200, 255, 0.26);
+  --cyber-glow: rgba(0, 200, 255, 0.45);
+  --cyber-text-main: rgba(255, 255, 255, 0.85);
+  --cyber-text-heading: rgba(228, 247, 255, 0.98);
+}
+
+.cyber-heading,
+.cyber-text,
+.cyber-label {
+  font-family: inherit;
+}
+
+.cyberpunk-theme {
+  font-family: "Rajdhani", "Segoe UI", "Noto Sans", sans-serif;
+  color: var(--cyber-text-main);
+}
+
+.cyberpunk-theme h1,
+.cyberpunk-theme h2,
+.cyberpunk-theme h3,
+.cyberpunk-theme h4,
+.cyberpunk-theme h5,
+.cyberpunk-theme h6,
+.cyberpunk-theme .cyber-heading {
+  font-family: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--cyber-text-heading);
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.5);
+}
+
+.cyberpunk-theme p,
+.cyberpunk-theme li,
+.cyberpunk-theme .cyber-text {
+  color: var(--cyber-text-main);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+.cyberpunk-theme .cyber-label,
+.cyberpunk-theme label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(0, 200, 255, 0.3);
+  background: rgba(0, 200, 255, 0.15);
+  color: rgba(220, 245, 255, 0.96);
+  text-shadow: 0 0 6px rgba(0, 200, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+.cyberpunk-theme a {
+  color: rgba(142, 227, 255, 0.94);
+  transition: color 180ms ease, text-shadow 180ms ease;
+}
+
+.cyberpunk-theme a:hover {
+  color: rgba(214, 247, 255, 0.98);
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.4);
+}
+
+.cyberpunk-theme .cyber-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--cyber-border) !important;
+  background: linear-gradient(145deg, rgba(9, 18, 35, 0.92), rgba(7, 13, 26, 0.88)) !important;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 rgba(144, 238, 255, 0.14),
+    0 0 26px rgba(0, 200, 255, 0.16);
+  clip-path: polygon(0 14px, 14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+
+.cyberpunk-theme .cyber-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(0, 200, 255, 0.22), transparent 36%) top left / 100% 100% no-repeat,
+    radial-gradient(circle at top right, rgba(0, 200, 255, 0.16), transparent 36%);
+  pointer-events: none;
+}
+
+.cyberpunk-theme .cyber-dialog {
+  border: 1px solid var(--cyber-border) !important;
+  background: linear-gradient(145deg, rgba(7, 14, 29, 0.96), rgba(9, 20, 36, 0.94)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(141, 234, 255, 0.12),
+    0 0 32px rgba(0, 200, 255, 0.2);
+  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+}
+
+.cyberpunk-theme .cyber-button,
+.cyberpunk-theme button,
+.cyberpunk-theme [role="button"] {
+  border: 1px solid var(--cyber-border-soft) !important;
+  background: linear-gradient(145deg, rgba(0, 122, 180, 0.2), rgba(7, 24, 46, 0.85)) !important;
+  color: rgba(225, 246, 255, 0.98) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow:
+    inset 0 1px 0 rgba(147, 237, 255, 0.16),
+    0 0 14px rgba(0, 200, 255, 0.2);
+  clip-path: polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.cyberpunk-theme .cyber-button:hover,
+.cyberpunk-theme button:hover,
+.cyberpunk-theme [role="button"]:hover {
+  border-color: var(--cyber-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(149, 241, 255, 0.22),
+    0 0 22px rgba(0, 200, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.cyberpunk-theme .cyber-button:focus-visible,
+.cyberpunk-theme button:focus-visible,
+.cyberpunk-theme [role="button"]:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(149, 241, 255, 0.22),
+    0 0 22px rgba(0, 200, 255, 0.32),
+    0 0 0 2px rgba(0, 200, 255, 0.36);
+}
+
+.cyberpunk-theme .cyber-button:disabled,
+.cyberpunk-theme button:disabled,
+.cyberpunk-theme [role="button"][aria-disabled="true"] {
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.cyberpunk-theme .cyber-input,
+.cyberpunk-theme input,
+.cyberpunk-theme textarea,
+.cyberpunk-theme select {
+  border: 1px solid rgba(0, 200, 255, 0.3) !important;
+  background: var(--cyber-bg) !important;
+  color: rgba(228, 247, 255, 0.96) !important;
+  letter-spacing: 0.03em;
+}
+
+.cyberpunk-theme input::placeholder,
+.cyberpunk-theme textarea::placeholder {
+  color: rgba(178, 219, 237, 0.72) !important;
+}
+
+.cyberpunk-theme .cyber-input:focus-visible,
+.cyberpunk-theme input:focus-visible,
+.cyberpunk-theme textarea:focus-visible,
+.cyberpunk-theme select:focus-visible {
+  outline: none;
+  border-color: var(--cyber-border) !important;
+  box-shadow: 0 0 0 2px rgba(0, 200, 255, 0.22), 0 0 18px rgba(0, 200, 255, 0.16);
+}
+
+.cyberpunk-theme .cyber-separator,
+.cyberpunk-theme hr {
+  background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.72), transparent) !important;
+  border: 0;
+  height: 1px;
+}
+
+.cyberpunk-theme .global-bg-content {
+  background:
+    radial-gradient(65% 80% at 0% 0%, rgba(0, 200, 255, 0.11), transparent 60%),
+    radial-gradient(50% 65% at 100% 0%, rgba(74, 151, 255, 0.08), transparent 62%);
+}
+
+.cyberpunk-theme ::selection {
+  background: rgba(0, 200, 255, 0.3);
+  color: rgba(237, 251, 255, 0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyberpunk-theme .cyber-button,
+  .cyberpunk-theme button,
+  .cyberpunk-theme [role="button"] {
+    transition: none;
   }
 }
 

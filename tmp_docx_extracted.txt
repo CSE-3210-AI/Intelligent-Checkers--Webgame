@@ -1,0 +1,36 @@
+Technical Report: Advanced Checkers AI Systems
+A Comparative Study of Deterministic Alpha-Beta Pruning 
+vs. Probabilistic Monte Carlo Tree Search with Fuzzy Logic
+1. Introduction
+This project explores the intersection of classical game theory and modern heuristic-driven AI. The objective is to create a high-performance Checkers environment where two distinct AI architectures can be evaluated. Checkers, while mathematically solved, remains a perfect testbed for observing how different search algorithms handle state-space complexity and tactical trade-offs.
+2. System Architecture
+The application is built on a full-stack architecture designed for low-latency AI decision-making.
+- Frontend: React + Vite for a responsive, state-driven UI.
+- Backend: FastAPI (Python) utilizing high-speed move validation logic.
+- Database: Supabase for persistent leaderboard and match history tracking.
+3. Agent Megha: Minimax & Alpha-Beta
+Agent Megha utilizes a depth-first search approach. It assumes a 'rational opponent' model, where each player plays optimally to maximize their own advantage.
+3.1 Alpha-Beta Pruning Mechanism
+To handle the exponential growth of the game tree, Alpha-Beta pruning is implemented. By maintaining two values, Alpha (best score for Red) and Beta (best score for Black), the agent ignores branches that cannot possibly influence the final decision.
+[FIGURE 1: MINIMAX DECISION TREE WITH PRUNING HIERARCHY]
+4. Agent Adiba: MCTS & Fuzzy Logic
+Agent Adiba represents a departure from traditional search. It uses Monte Carlo Tree Search (MCTS), which focuses on statistical simulation rather than exhaustive branch evaluation.
+4.1 The MCTS Cycle
+Adiba follows four distinct phases for every decision:
+1. Selection: Navigating existing nodes using the Upper Confidence Bound (UCB1).
+2. Expansion: Adding new potential board states to the tree.
+3. Simulation: Performing 'rollouts' (rapid random games) to estimate win rates.
+4. Backpropagation: Updating the parent nodes with the simulation results.
+4.2 Fuzzy Logic Prioritization
+To make simulations more efficient, a Fuzzy Logic layer pre-scores moves. Factors like 'King Safety' and 'Capture Pressure' are mapped to fuzzy sets, allowing the AI to prioritize simulating high-value moves over low-quality ones.
+[FIGURE 2: FUZZY LOGIC SCORING AND MCTS INTEGRATION]
+5. Game Integrity: Draw Conditions
+To prevent infinite loops and ensure match completion, two technical draw conditions are enforced:
+<w:tblPr><w:tblW w:type="auto" w:w="0"/><w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/></w:tblPr><w:tblGrid><w:gridCol w:w="4320"/><w:gridCol w:w="4320"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>Condition
+<w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>Implementation
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>No-Progress Draw
+<w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>Triggered after 40 moves without a capture or promotion.
+<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>Repetition Draw
+<w:tcPr><w:tcW w:type="dxa" w:w="4320"/></w:tcPr><w:p><w:r><w:t>Triggered if the board state occurs 3 times in one match.
+6. Conclusion
+The comparison between Megha and Adiba highlights a fundamental AI trade-off: precision vs. adaptability. Megha dominates in tactical 'forced' endgame scenarios, while Adiba shows superior flexibility in complex mid-game board configurations.

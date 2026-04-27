@@ -5,12 +5,51 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Trophy, Gamepad2, ChevronDown, LogOut } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
+import ScoresModal from '@/components/ScoresModal';
+import { fetchScores } from '@/lib/scoresApi';
 
 const Home = () => {
   const navigate = useNavigate();
   const { user, logout } = useUser();
   const [dropdown, setDropdown] = useReactState(false);
+  const [scoresOpen, setScoresOpen] = useReactState(false);
   const dropdownRef = useRef();
+  const [matches, setMatches] = useReactState([]);
+  const [scoresLoading, setScoresLoading] = useReactState(false);
+  const [scoresError, setScoresError] = useReactState(null);
+
+  React.useEffect(() => {
+    if (!scoresOpen || !user) return;
+    let active = true;
+    setScoresLoading(true);
+    setScoresError(null);
+    fetchScores(user.email)
+      .then((data) => {
+        if (!active) return;
+        const next = (data?.matches ?? []).map((match) => ({
+          player1: match.player1,
+          player2: match.player2,
+          score1: match.wins_player1 ?? match.player1_wins ?? 0,
+          score2: match.wins_player2 ?? match.player2_wins ?? 0,
+          draws: match.draws ?? 0,
+          gameMode: match.game_mode,
+          lastPlayed: match.last_played,
+        }));
+        setMatches(next);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setScoresError(err.message || 'Failed to load scores');
+      })
+      .finally(() => {
+        if (!active) return;
+        setScoresLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [scoresOpen, user]);
 
   function handleClickOutside(e) {
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -39,8 +78,14 @@ const Home = () => {
             <nav className="hidden items-center gap-6 md:flex" />
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
-              <button className="CyberButton CyberButton--secondary hidden rounded-md px-4 py-2 font-medium sm:inline-flex">
-                Rankings
+              <button
+                className="CyberButton CyberButton--secondary hidden rounded-md px-4 py-2 font-medium sm:inline-flex"
+                onClick={() => {
+                  if (user) setScoresOpen(true);
+                  else navigate('/signin');
+                }}
+              >
+                SCORES
               </button>
 
               {user ? (
@@ -139,6 +184,14 @@ const Home = () => {
             </div>
           </div>
         </footer>
+
+        <ScoresModal
+          isOpen={scoresOpen}
+          onClose={() => setScoresOpen(false)}
+          matches={matches}
+          loading={scoresLoading}
+          error={scoresError}
+        />
     </div>
   );
 };

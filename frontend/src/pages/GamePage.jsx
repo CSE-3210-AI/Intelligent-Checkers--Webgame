@@ -24,6 +24,8 @@ import {
   getAgentMeghaMove,
   getExternalAgentMove,
 } from '../lib/gameApi';
+import { upsertScore } from '../lib/scoresApi';
+import { useUser } from '@/context/UserContext';
 import {
   detectGamePhase,
   getPhaseStrategyLabel,
@@ -183,12 +185,21 @@ function cloneBoard(board) {
   return board.map(row => (Array.isArray(row) ? [...row] : row));
 }
 
-function createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures }) {
+function createHistorySnapshot({
+  engineBoard,
+  currentPlayer,
+  moveCount,
+  captures,
+  noProgressCount,
+  repetitionCounts,
+}) {
   return {
     engineBoard: cloneBoard(engineBoard),
     currentPlayer,
     moveCount,
     captures: { ...captures },
+    noProgressCount,
+    repetitionCounts: { ...(repetitionCounts ?? {}) },
   };
 }
 
@@ -211,6 +222,7 @@ function getPreCaptureCandidates(moves = []) {
 const GamePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useUser();
 
   const [mode, setMode]           = useState('demo');
   const [gameMode, setGameMode]   = useState('human-vs-human');
@@ -225,6 +237,9 @@ const GamePage = () => {
   const [moveCount,      setMoveCount]      = useState(0);
   const [captures,       setCaptures]       = useState({ blue: 0, red: 0 });
   const [winner,         setWinner]         = useState(null);
+  const [drawState,      setDrawState]      = useState(null); // { status: "draw", reason: "no_progress"|"repetition" } | null
+  const [noProgressCount, setNoProgressCount] = useState(0);
+  const [repetitionCounts, setRepetitionCounts] = useState({});
   const [history,        setHistory]        = useState([]);
 
   const [legalMoves,     setLegalMoves]     = useState([]);
@@ -266,6 +281,7 @@ const GamePage = () => {
 
   const [startTime, setStartTime] = useState(() => Date.now());
   const [elapsed,   setElapsed]   = useState(0);
+  const recordedMatchIdRef = useRef(null);
 
   useEffect(() => {
     const id = setInterval(
@@ -315,7 +331,8 @@ const GamePage = () => {
     (players.red?.type ?? 'human') !== 'human';
   const isCurrentTurnHuman = currentPlayerType === 'human';
   const isCurrentTurnAi = !isCurrentTurnHuman;
-  const isAiTurn = mode === 'play' && isCurrentTurnAi && !winner;
+  const gameOver = Boolean(winner || drawState?.status === 'draw');
+  const isAiTurn = mode === 'play' && isCurrentTurnAi && !gameOver;
   const interactionLocked =
     loading ||
     isFetchingAgentMove ||
@@ -338,7 +355,7 @@ const GamePage = () => {
   );
 
   const loadLegalMoves = useCallback(async (board, player) => {
-    if (!board || winner) {
+    if (!board || gameOver) {
       setLegalMoves([]);
       setPreCaptureCandidates([]);
       setMoveableSet(new Set());
@@ -354,7 +371,7 @@ const GamePage = () => {
     } catch (err) {
       setApiError(`Failed to load legal moves: ${err.message}`);
     }
-  }, [winner]);
+  }, [gameOver]);
 
   const ensureCaptureAudio = useCallback(() => {
     if (!captureAudioRef.current) {
@@ -429,6 +446,9 @@ const GamePage = () => {
     setMoveCount(result.moveCount);
     setCaptures(result.captures);
     setWinner(result.winner);
+    setDrawState(result.status === 'draw' ? { status: 'draw', reason: result.reason } : null);
+    setNoProgressCount(result.noProgressCount ?? 0);
+    setRepetitionCounts(result.repetitionCounts ?? {});
     setSelected(null);
     setHighlights([]);
     setLastMove({ from: move.from, to: move.to[0] });
@@ -452,7 +472,7 @@ const GamePage = () => {
       }));
     }
 
-    if (!result.winner) {
+    if (!result.winner && result.status !== 'draw') {
       const nextType = players[result.currentPlayer]?.type ?? 'human';
       if (nextType === 'human') {
         await loadLegalMoves(result.board, result.currentPlayer);
@@ -742,6 +762,9 @@ const GamePage = () => {
       setMoveCount(data.moveCount);
       setCaptures(data.captures);
       setWinner(data.winner);
+      setDrawState(data.status === 'draw' ? { status: 'draw', reason: data.reason } : null);
+      setNoProgressCount(data.noProgressCount ?? 0);
+      setRepetitionCounts(data.repetitionCounts ?? {});
       setHistory([]);
       setSelected(null);
       setHighlights([]);
@@ -755,6 +778,7 @@ const GamePage = () => {
       setShowVsSplash(Boolean(playerConfig.blue?.agentKey || playerConfig.red?.agentKey));
       setStartTime(Date.now());
       setElapsed(0);
+      recordedMatchIdRef.current = null;
       const nextType = playerConfig[data.currentPlayer]?.type ?? 'human';
       if (nextType === 'human') {
         await loadLegalMoves(data.board, data.currentPlayer);
@@ -803,6 +827,9 @@ const GamePage = () => {
       setMoveCount(snap.moveCount);
       setCaptures(snap.captures);
       setWinner(null);
+      setDrawState(null);
+      setNoProgressCount(snap.noProgressCount ?? 0);
+      setRepetitionCounts(snap.repetitionCounts ?? {});
       setSelected(null);
       setHighlights([]);
       const restoreType = players[snap.currentPlayer]?.type ?? 'human';
@@ -822,9 +849,10 @@ const GamePage = () => {
   };
 
   const handleResign = () => {
-    if (winner || mode !== 'play' || isMoveAnimating || isPreCaptureAnimating) return;
+    if (gameOver || mode !== 'play' || isMoveAnimating || isPreCaptureAnimating) return;
     const resignWinner = currentPlayer === 'blue' ? 'red' : 'blue';
     setWinner(resignWinner);
+    setDrawState(null);
     setLegalMoves([]);
     setPreCaptureCandidates([]);
     setMoveableSet(new Set());
@@ -844,7 +872,7 @@ const GamePage = () => {
   };
 
   const handleSquareClick = async (row, col) => {
-    if (interactionLocked || winner || mode !== 'play' || isAiTurn) return;
+    if (interactionLocked || gameOver || mode !== 'play' || isAiTurn) return;
 
     if (selected && highlights.some(([r, c]) => r === row && c === col)) {
       const move = legalMoves.find(
@@ -858,9 +886,24 @@ const GamePage = () => {
       if (move) {
         setLoading(true);
         setApiError(null);
-        const snapshot = createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures });
+        const snapshot = createHistorySnapshot({
+          engineBoard,
+          currentPlayer,
+          moveCount,
+          captures,
+          noProgressCount,
+          repetitionCounts,
+        });
         try {
-          const result = await sendMove(engineBoard, move, currentPlayer, captures, moveCount);
+          const result = await sendMove(
+            engineBoard,
+            move,
+            currentPlayer,
+            captures,
+            moveCount,
+            noProgressCount,
+            repetitionCounts,
+          );
           queueMoveAnimation({ move, result, snapshot });
         } catch (err) {
           setApiError(`Move failed: ${err.message}`);
@@ -943,8 +986,23 @@ const GamePage = () => {
         return;
       }
 
-      const snapshot = createHistorySnapshot({ engineBoard, currentPlayer, moveCount, captures });
-      const result = await sendMove(engineBoard, decision.move, currentPlayer, captures, moveCount);
+      const snapshot = createHistorySnapshot({
+        engineBoard,
+        currentPlayer,
+        moveCount,
+        captures,
+        noProgressCount,
+        repetitionCounts,
+      });
+      const result = await sendMove(
+        engineBoard,
+        decision.move,
+        currentPlayer,
+        captures,
+        moveCount,
+        noProgressCount,
+        repetitionCounts,
+      );
 
       queueMoveAnimation({
         move: decision.move,
@@ -957,7 +1015,18 @@ const GamePage = () => {
       setApiError(`${actor.name} failed to move: ${err.message}`);
       setIsFetchingAgentMove(false);
     }
-  }, [captures, currentPlayer, engineBoard, interactionLocked, isAiTurn, moveCount, players, queueMoveAnimation]);
+  }, [
+    captures,
+    currentPlayer,
+    engineBoard,
+    interactionLocked,
+    isAiTurn,
+    moveCount,
+    noProgressCount,
+    players,
+    queueMoveAnimation,
+    repetitionCounts,
+  ]);
 
   useEffect(() => {
     if (!autoPlayEnabled) {
@@ -1006,6 +1075,11 @@ const GamePage = () => {
   const isSingleAgentMode = gameMode === 'human-vs-adiba' || gameMode === 'human-vs-megha';
   const singleAgentLabel = gameMode === 'human-vs-megha' ? 'Agent Megha' : 'Agent Adiba';
   const winnerProfile = winner ? players[winner] : null;
+  const drawReasonLabel = drawState?.reason === 'no_progress'
+    ? '40 no-progress moves'
+    : drawState?.reason === 'repetition'
+      ? '3x board repetition'
+      : 'Draw';
   const onlineInternalProfile = players.blue ?? { name: 'Internal Agent', agentKey: 'adiba' };
   const onlineExternalProfile = players.red ?? { name: 'Online Agent', agentKey: 'external' };
   const onlineInternalDecision = agentDecisionsByColor.blue;
@@ -1019,6 +1093,35 @@ const GamePage = () => {
       : null;
   const strategyAgentTheme = strategyAgentProfile ? getIdentityTheme(strategyAgentProfile) : AGENT_IDENTITY_THEME.external;
   const strategyAgentSide = strategyAgentProfile === players.red ? 'red' : 'blue';
+
+  useEffect(() => {
+    if ((!winner && drawState?.status !== 'draw') || mode !== 'play') return;
+
+    const matchId = `${startTime}-${gameMode}-${players.blue?.name}-${players.red?.name}`;
+    if (recordedMatchIdRef.current === matchId) return;
+
+    const blueName = players.blue?.type === 'human'
+      ? (user?.username || players.blue?.name || 'Player 1')
+      : (players.blue?.name || 'Blue');
+    const redName = players.red?.type === 'human'
+      ? (players.blue?.type === 'human' ? (players.red?.name || 'Player 2') : (user?.username || players.red?.name || 'Player 2'))
+      : (players.red?.name || 'Red');
+
+    if (!user?.email) return;
+
+    const winnerSide = winner === 'blue' ? 'player1' : winner === 'red' ? 'player2' : 'draw';
+    void upsertScore({
+      userEmail: user.email,
+      player1: blueName,
+      player2: redName,
+      winner: winnerSide,
+      gameMode,
+    }).catch(() => {
+      // Score updates should not block gameplay UI.
+    });
+
+    recordedMatchIdRef.current = matchId;
+  }, [captures.blue, captures.red, drawState, gameMode, mode, players, startTime, user, winner]);
 
   // Responsive container and layout
   return (
@@ -1085,7 +1188,7 @@ const GamePage = () => {
           <section className="order-2 min-w-0 space-y-3 lg:order-1 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'blue' ? blueIdentityTheme.activePanel : blueIdentityTheme.panel}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'blue' ? blueIdentityTheme.activePanel : blueIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={bluePlayer} side="blue" size="md" />
@@ -1110,7 +1213,7 @@ const GamePage = () => {
 
                 <Separator className="bg-white/10" />
 
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !winner && currentPlayer === 'red' ? redIdentityTheme.activePanel : redIdentityTheme.panel}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'red' ? redIdentityTheme.activePanel : redIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={redPlayer} side="red" size="md" />
@@ -1171,7 +1274,7 @@ const GamePage = () => {
                 {mode === 'play' && hasAiPlayersInMatch && (
                   <Button
                     onClick={handleAgentMove}
-                    disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner}
+                    disabled={autoPlayEnabled || !isAiTurn || loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || gameOver}
                     className="h-11 w-full rounded-xl font-semibold disabled:opacity-60"
                   >
                     {isFetchingAgentMove && !autoPlayEnabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1194,7 +1297,7 @@ const GamePage = () => {
                   </Button>
                   <Button
                     onClick={() => setShowResignModal(true)}
-                    disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || !!winner || mode !== 'play'}
+                    disabled={loading || isFetchingAgentMove || isMoveAnimating || isPreCaptureAnimating || gameOver || mode !== 'play'}
                     variant="destructive"
                     className="h-11 rounded-xl"
                   >
@@ -1599,6 +1702,24 @@ const GamePage = () => {
                 {(winnerProfile?.name ?? 'Unknown')} ({winner === 'blue' ? 'Blue' : 'Red'}) Wins!
               </h2>
               <p className="text-slate-300">Game over - start a new match?</p>
+              <Button
+                onClick={handleNewGame}
+                className="h-11 w-full rounded-xl"
+              >
+                New Game
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {drawState?.status === 'draw' && mode === 'play' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
+          <Card className="CyberDialog w-full max-w-sm rounded-2xl border border-white/20 bg-slate-900/95">
+            <CardContent className="space-y-4 p-7 text-center">
+              <div className="text-5xl">🤝</div>
+              <h2 className="text-3xl font-extrabold text-white">Draw</h2>
+              <p className="text-slate-300">Reason: {drawReasonLabel}</p>
               <Button
                 onClick={handleNewGame}
                 className="h-11 w-full rounded-xl"

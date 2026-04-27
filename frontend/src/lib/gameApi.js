@@ -48,7 +48,7 @@ async function get(path) {
  *
  * Start a new game.  Returns initial board and metadata.
  *
- * Response: { board, currentPlayer, moveCount, captures, winner }
+ * Response: { board, currentPlayer, moveCount, captures, winner, status, reason, noProgressCount, repetitionCounts }
  */
 export async function initGame() {
   return post('/init', {});
@@ -72,7 +72,7 @@ export async function fetchLegalMoves(board, player) {
 }
 
 /**
- * sendMove(board, move, currentPlayer, captures, moveCount)
+ * sendMove(board, move, currentPlayer, captures, moveCount, noProgressCount, repetitionCounts)
  *
  * Send a chosen move to the backend for validation and application.
  *
@@ -81,13 +81,33 @@ export async function fetchLegalMoves(board, player) {
  *   board:         updated 8×8 matrix,
  *   currentPlayer: next player,
  *   winner:        "blue"|"red"|null,
+ *   status:        "ongoing"|"win"|"draw",
+ *   reason:        "no_progress"|"repetition"|null,
  *   captures:      { blue, red },
  *   captureCount:  n,
  *   moveCount:     n,
+ *   noProgressCount: n,
+ *   repetitionCounts: { [serializedBoard]: count },
  * }
  */
-export async function sendMove(board, move, currentPlayer, captures, moveCount) {
-  return post('/move', { board, move, currentPlayer, captures, moveCount });
+export async function sendMove(
+  board,
+  move,
+  currentPlayer,
+  captures,
+  moveCount,
+  noProgressCount = 0,
+  repetitionCounts = {},
+) {
+  return post('/move', {
+    board,
+    move,
+    currentPlayer,
+    captures,
+    moveCount,
+    noProgressCount,
+    repetitionCounts,
+  });
 }
 
 /**

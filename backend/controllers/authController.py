@@ -101,8 +101,12 @@ async def signup(payload: SignupRequest | dict[str, Any] | None = None):
                 "created_at": _safe_get(user, "created_at"),
             }
         }
-    except Exception:
-        return {"error": "Server error"}, 500
+    except Exception as exc:
+        import traceback
+        error_msg = str(exc)
+        tb = traceback.format_exc()
+        print(f"Signup error: {error_msg}\n{tb}", flush=True)
+        return {"error": f"Server error: {error_msg[:100]}"}, 500
 
 
 async def signin(payload: SigninRequest | dict[str, Any] | None = None):

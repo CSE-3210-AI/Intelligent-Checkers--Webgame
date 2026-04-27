@@ -28,6 +28,8 @@ Keep the existing `.env` file and values. These are still used:
 
 Create the users table in Supabase PostgreSQL by running the SQL in [users.sql](users.sql).
 
+Create the match history table by running the SQL in [match_history.sql](match_history.sql).
+
 ## 4) Start the server
 
 ```bash
@@ -42,5 +44,7 @@ uvicorn main:app --host 0.0.0.0 --port 4000 --reload
 - `POST /api/game/legal-moves`
 - `POST /api/game/move`
 - `GET /api/game/state`
+- `POST /api/scores/upsert`
+- `GET /api/scores?userEmail=...&gameMode=...`
 
 All sensitive credentials are loaded from `.env` and are never exposed to the frontend.

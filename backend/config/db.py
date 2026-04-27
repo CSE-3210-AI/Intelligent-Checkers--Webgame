@@ -1,5 +1,4 @@
 from typing import Optional
-
 import asyncpg
 
 from config.env import DATABASE_URL
@@ -12,6 +11,7 @@ async def get_pool() -> asyncpg.Pool:
     if _pool is None:
         if not DATABASE_URL:
             raise RuntimeError("Missing DATABASE_URL in environment variables.")
+
         _pool = await asyncpg.create_pool(
             dsn=DATABASE_URL,
             ssl="require",

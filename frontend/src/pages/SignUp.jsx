@@ -2,17 +2,33 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
-import { supabase, isSupabaseConfigured, supabaseConfigError } from '@/lib/supabase';
 
 export default function SignUp() {
   const navigate = useNavigate();
   const { login } = useUser();
+
+  async function signUpWithBackend({ username, email, password }) {
+    let response;
+    try {
+      response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+      });
+    } catch {
+      throw new Error('Unable to reach authentication server. Make sure backend is running on port 4000.');
+    }
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(body?.error || 'Sign up failed');
+    }
+
+    return body;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!isSupabaseConfigured) {
-      alert(supabaseConfigError);
-      return;
-    }
     const form = e.target;
     const username = form[0].value;
     const email = form[1].value;
@@ -22,17 +38,16 @@ export default function SignUp() {
       alert('Passwords do not match');
       return;
     }
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username } },
-    });
-    if (error) {
-      alert(error.message);
+
+    try {
+      const data = await signUpWithBackend({ username, email, password });
+      const resolvedUsername = data?.user?.username || username;
+      login({ email, username: resolvedUsername });
+      navigate('/');
+    } catch (error) {
+      alert(error.message || 'Sign up failed');
       return;
     }
-    login({ email, username });
-    navigate('/');
   }
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

@@ -2,28 +2,46 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
-import { supabase, isSupabaseConfigured, supabaseConfigError } from '@/lib/supabase';
 
 export default function SignIn() {
   const navigate = useNavigate();
   const { login } = useUser();
+
+  async function signInWithBackend({ email, password }) {
+    let response;
+    try {
+      response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      throw new Error('Unable to reach authentication server. Make sure backend is running on port 4000.');
+    }
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(body?.error || 'Sign in failed');
+    }
+
+    return body;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!isSupabaseConfigured) {
-      alert(supabaseConfigError);
-      return;
-    }
     const form = e.target;
     const email = form[0].value;
     const password = form[1].value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      alert(error.message);
+
+    try {
+      const data = await signInWithBackend({ email, password });
+      const username = data?.user?.username || data?.user?.email || email;
+      login({ email: data?.user?.email || email, username });
+      navigate('/');
+    } catch (error) {
+      alert(error.message || 'Sign in failed');
       return;
     }
-    const username = data.user?.user_metadata?.username || data.user?.email;
-    login({ email: data.user.email, username });
-    navigate('/');
   }
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

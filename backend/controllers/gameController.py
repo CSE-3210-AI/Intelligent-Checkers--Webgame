@@ -9,7 +9,7 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError
 
 from game.board import initializeBoard
-from game.gameState import executeTurn
+from game.gameState import executeTurn, serializeBoard
 from game.moveGenerator import getLegalMoves
 from services.agentAdiba.agent_adiba import get_agent_adiba_move
 from services.agentMegha.agent_megha import get_agent_megha_move
@@ -39,6 +39,8 @@ class MoveRequest(BaseModel):
     currentPlayer: str
     captures: CapturesModel = Field(default_factory=CapturesModel)
     moveCount: int = 0
+    noProgressCount: int = 0
+    repetitionCounts: dict[str, int] = Field(default_factory=dict)
 
 
 class AgentAdibaRequest(BaseModel):
@@ -62,12 +64,17 @@ _external_agent = ExternalAgent()
 async def initGame():
     try:
         board = initializeBoard()
+        initial_key = serializeBoard(board)
         return {
             "board": board,
             "currentPlayer": "blue",
             "moveCount": 0,
             "captures": {"blue": 0, "red": 0},
             "winner": None,
+            "status": "ongoing",
+            "reason": None,
+            "noProgressCount": 0,
+            "repetitionCounts": {initial_key: 1},
         }
     except Exception as err:
         return {"error": str(err)}, 500
@@ -126,11 +133,19 @@ async def makeMoveHandler(payload: MoveRequest | dict[str, Any]):
         current_player = payload.currentPlayer
         captures = {"blue": payload.captures.blue, "red": payload.captures.red}
         move_count = payload.moveCount
+        no_progress_count = payload.noProgressCount
+        repetition_counts = payload.repetitionCounts or {}
 
         if not board or not move or not current_player:
             return {"error": '"board", "move", and "currentPlayer" are required.'}, 400
 
-        result = executeTurn(board, move, current_player)
+        result = executeTurn(
+            board,
+            move,
+            current_player,
+            noProgressCount=no_progress_count,
+            repetitionCounts=repetition_counts,
+        )
 
         new_captures = {
             "blue": captures["blue"] + (result["captureCount"] if current_player == "blue" else 0),
@@ -141,9 +156,13 @@ async def makeMoveHandler(payload: MoveRequest | dict[str, Any]):
             "board": result["newBoard"],
             "currentPlayer": result["nextPlayer"],
             "winner": result["winner"],
+            "status": result["status"],
+            "reason": result["reason"],
             "captures": new_captures,
             "captureCount": result["captureCount"],
             "moveCount": move_count + 1,
+            "noProgressCount": result["noProgressCount"],
+            "repetitionCounts": result["repetitionCounts"],
         }
     except Exception as err:
         return {"error": str(err)}, 500
@@ -165,6 +184,8 @@ async def getStateHandler():
             "Multi-jump captures – full chain expanded in one turn",
             "King promotion at back row (row 7 for blue, row 0 for red)",
             "Win: opponent has no pieces OR no legal moves",
+            "Draw: 40 no-progress moves (no capture and no promotion)",
+            "Draw: same board position repeated 3 times",
         ],
         "aiFunctions": [
             "getLegalMoves(board, player)",

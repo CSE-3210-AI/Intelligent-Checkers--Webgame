@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from config.env import PORT
 from routes.auth import router as auth_router
 from routes.game import router as game_router
+from routes.scores import router as scores_router
 
 app = FastAPI()
 
@@ -18,6 +19,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(game_router, prefix="/api/game")
+app.include_router(scores_router, prefix="/api/scores")
 
 
 @app.get("/")

@@ -169,7 +169,7 @@ const Home = () => {
           <div className="mx-auto max-w-7xl">
             <Separator className="mb-6 bg-white/20" />
             <div className="flex flex-col items-center justify-between gap-4 text-sm text-slate-100 md:flex-row">
-              <p className="text-center font-medium md:text-left">© 2026 StellarCheckers. All rights reserved.</p>
+              <p className="text-center font-medium md:text-left">© 2026 Checkers AI. All rights reserved.</p>
               <div className="flex flex-wrap justify-center gap-6">
                 <Button variant="link" size="sm" className="text-slate-100/90 hover:text-white">
                   Terms of Service

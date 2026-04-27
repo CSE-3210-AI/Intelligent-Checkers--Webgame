@@ -1188,7 +1188,7 @@ const GamePage = () => {
           <section className="order-2 min-w-0 space-y-3 lg:order-1 lg:col-span-3 lg:h-[520px] lg:overflow-y-auto lg:pr-1">
             <Card className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 shadow-[0_16px_45px_rgba(2,6,23,0.35)] backdrop-blur-xl">
               <CardContent className="space-y-4 p-4">
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'blue' ? blueIdentityTheme.activePanel : blueIdentityTheme.panel}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'blue' ? `${blueIdentityTheme.activePanel} active-turn-card active-turn-card-blue` : blueIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={bluePlayer} side="blue" size="md" />
@@ -1213,7 +1213,7 @@ const GamePage = () => {
 
                 <Separator className="bg-white/10" />
 
-                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'red' ? redIdentityTheme.activePanel : redIdentityTheme.panel}`}>
+                <div className={`CyberPanel rounded-xl border p-4 ${mode === 'play' && !gameOver && currentPlayer === 'red' ? `${redIdentityTheme.activePanel} active-turn-card active-turn-card-red` : redIdentityTheme.panel}`}>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <AgentPortrait profile={redPlayer} side="red" size="md" />
